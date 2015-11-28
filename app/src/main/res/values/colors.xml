@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#049ae2</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#0099e2</color>
+    <color name="primary_material_light">#03a9f4</color>
+    <color name="statusBarColor">#1976d2</color>
+    <color name="background_material_light">#fdfbfb</color>
+    <color name="statusBarColor_1">#0288d1</color>
+    <color name="accent_material_light">#448aff</color>
+    <color name="secondary_text_default_material_light">#8affffff</color>
+    <color name="windowBackground">#fbfafa</color>
+    <color name="yellow1" >#ffee00</color>
+    <color name="yellow2" >#fff673</color>
+    <color name="grey05" >#ecece9</color>
+    <color name="orange4" >#ff6f00</color>
+    <color name="orange5" >#ffaa5a</color>
+    <color name="blue2" >#029ae2</color>
+    <color name="blue25" >#4dbff4</color>
+    <color name="primary_text_default_material_light">#deb89f9f</color>
+</resources>

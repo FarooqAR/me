@@ -1,0 +1,78 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:theme="@style/MainTheme"
+    tools:context="com.example.stranger.me.fragments.SignUpFragment">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:orientation="vertical">
+
+        <com.example.stranger.me.widget.RobotoTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Become A Member"
+            android:textColor="#fff"
+            android:textSize="24sp" />
+
+        <com.example.stranger.me.widget.RobotoEditText
+            android:id="@+id/sign_up_email"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:hint="Your Email"
+            android:textCursorDrawable="@null"
+            android:textColor="#fff"
+            android:textColorHint="#fff"
+            android:drawablePadding="5dp"
+            android:drawableLeft="@drawable/ic_email_white"/>
+
+        <com.example.stranger.me.widget.RobotoEditText
+            android:id="@+id/sign_up_pass"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:hint="Your Password"
+
+            android:drawablePadding="5dp"
+            android:inputType="textPassword"
+            android:textColor="#fff"
+
+            android:textCursorDrawable="@null"
+            android:textColorHint="#fff"
+            android:drawableLeft="@drawable/ic_lock_white"/>
+
+
+        <Button
+            android:id="@+id/btn_sign_up"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:text="Sign Up"
+            android:textColor="#fff" />
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:gravity="center"
+        android:orientation="horizontal">
+        <com.example.stranger.me.widget.RobotoTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Already a Member?"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#fff"
+            android:id="@+id/btn_sign_in"
+            android:text="Sign In"/>
+    </LinearLayout>
+</RelativeLayout>
