@@ -13,11 +13,10 @@ import com.example.stranger.me.R;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class SignUpFragmentScreen1 extends Fragment {
-
-    private Button mSignInButton;
-    private ViewChangeListener mListener;
-    public SignUpFragmentScreen1() {
+public class LoginFragment extends Fragment {
+    private Button mSignUpButton;
+    private SignUpFragmentScreen1.ViewChangeListener mListener;
+    public LoginFragment() {
         // Required empty public constructor
     }
 
@@ -26,18 +25,16 @@ public class SignUpFragmentScreen1 extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view= inflater.inflate(R.layout.fragment_sign_up_screen1, container, false);
-        mSignInButton = (Button) view.findViewById(R.id.btn_sign_in);
-        mListener = (ViewChangeListener) getActivity();
-        mSignInButton.setOnClickListener(new View.OnClickListener() {
+        View view =  inflater.inflate(R.layout.fragment_login, container, false);
+        mSignUpButton = (Button) view.findViewById(R.id.btn_sign_up);
+        mListener = (SignUpFragmentScreen1.ViewChangeListener) getActivity();
+        mSignUpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mListener.onClick(1);
+                mListener.onClick(0);
             }
         });
-        return  view;
+        return view;
     }
-    public interface ViewChangeListener{
-        public void onClick(int i);
-    }
+
 }
