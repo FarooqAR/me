@@ -30,7 +30,7 @@ public class FirebaseHelper {
 
     public static ArrayList<String> getFriends(String userId) {
         final ArrayList<String> friends = new ArrayList<String>();
-        getRoot().child("friends").addValueEventListener(new ValueEventListener() {
+        getRoot().child("friends").child(userId).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot singleDataSnapshot :
