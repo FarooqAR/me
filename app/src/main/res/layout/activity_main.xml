@@ -17,5 +17,10 @@
     <include
         android:id="@+id/splashContainer"
         layout="@layout/splash_screen" />
+    <com.example.stranger.me.widget.NonSwipeableViewPager
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:id="@+id/signup_signin_viewpager"/>
 
 </RelativeLayout>
