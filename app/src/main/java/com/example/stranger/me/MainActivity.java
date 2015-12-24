@@ -1,6 +1,7 @@
 package com.example.stranger.me;
 
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -9,12 +10,19 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 
+import com.example.stranger.me.adapter.PagerAdapter;
+import com.example.stranger.me.fragments.LoginFragment;
 import com.example.stranger.me.fragments.SignUpFragmentMain;
+import com.example.stranger.me.fragments.SignUpFragmentScreen1;
+import com.example.stranger.me.widget.NonSwipeableViewPager;
 import com.firebase.client.Firebase;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SignUpFragmentScreen1.ViewChangeListener{
     private static final String TAG = "MainActivity";
-    LinearLayout splashContainer;
+    private LinearLayout splashContainer;
+    private Fragment[] mFragments = {new SignUpFragmentMain(),new LoginFragment()};
+    private NonSwipeableViewPager mViewPager;
+    private PagerAdapter mPagerAdapter;
     float top;
     float left;
     RelativeLayout root;
@@ -34,7 +42,9 @@ public class MainActivity extends AppCompatActivity {
         root = (RelativeLayout) findViewById(R.id.root_main);
         splashContainer = (LinearLayout) findViewById(R.id.splashContainer);
         splashProgress = (ProgressBar) findViewById(R.id.splash_progress);
-
+        mViewPager = (NonSwipeableViewPager) findViewById(R.id.signup_signin_viewpager);
+        mPagerAdapter = new PagerAdapter(getSupportFragmentManager(),mFragments);
+        mViewPager.setAdapter(mPagerAdapter);
         //the x and y position of splashContainer cant be obtained until the viewTree is fully loaded
         //so set the listener that will call when it does.
         root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -59,11 +69,6 @@ public class MainActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
         outState.putBoolean("isRotated", true);
     }
-
-    public void test() {
-
-    }
-
     public void animateSplash(int delay, final int duration) {
         //animate the splash to top if screen is in portrait and not yet rotated
         if (!isLandscape() && !isRotated) {
@@ -71,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
 
-                    transaction.add(R.id.root_main, new SignUpFragmentMain()).commit();
+                    mViewPager.setVisibility(View.VISIBLE);
                 }
             }).withStartAction(new Runnable() {
                 @Override
@@ -92,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     splashProgress.setVisibility(View.INVISIBLE);
-                    transaction.add(R.id.root_main, new SignUpFragmentMain()).commit();
+                    mViewPager.setVisibility(View.VISIBLE);
                 }
             }).withStartAction(new Runnable() {
                 @Override
@@ -115,6 +120,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
+    @Override
+    public void onClick(int i) {
+        mViewPager.setCurrentItem(i);
+    }
 }
 
