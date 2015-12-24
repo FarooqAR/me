@@ -45,7 +45,7 @@ public class FirebaseHelper {
 
             }
         });
-        return friends;
+        return friends;//may return null
     }
 
 }
