@@ -1,20 +1,26 @@
+<!--
+1st or main screen to show on signup fragment
+-->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:theme="@style/MainTheme"
+
     tools:context="com.example.stranger.me.fragments.SignUpFragment">
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
+        android:layout_margin="@dimen/activity_horizontal_margin"
         android:orientation="vertical">
 
         <com.example.stranger.me.widget.RobotoTextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Become A Member"
+            android:layout_gravity="center_horizontal"
             android:textColor="#fff"
             android:textSize="24sp" />
 
@@ -68,13 +74,13 @@
             <ImageButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_google_plus"
+                android:src="@drawable/google_plus_icon"
                 android:background="#0000"
                 android:padding="5dp"/>
             <ImageButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_facebook"
+                android:src="@drawable/fb_icon"
                 android:background="#0000"
                 android:padding="5dp"/>
         </LinearLayout>

@@ -1,62 +1,59 @@
+
 <!--
-2nd screen in profile setup
-to ask user his first,lastname and dob
-user cannot skip it
+3th Screen in Profile Setup
+to ask user his info,country,city
+and user can skip it
 -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:theme="@style/MainTheme"
-    tools:context="com.example.stranger.me.fragments.SignUpFragmentScreen2">
-
+    tools:context="com.example.stranger.me.fragments.SignUpFragmentScreen3">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/activity_horizontal_margin"
         android:layout_centerInParent="true"
+        android:layout_margin="@dimen/activity_horizontal_margin"
+        android:gravity="center_horizontal"
         android:orientation="vertical">
 
         <com.example.stranger.me.widget.RobotoTextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Complete Your Profile"
-            android:layout_gravity="center_horizontal"
-            android:textColor="#fff"
-            android:textSize="24sp" />
-
+            android:text="Tell us About Yourself"
+            android:textSize="24sp"
+            android:textColor="#fff"/>
         <com.example.stranger.me.widget.RobotoEditText
-            android:id="@+id/sign_up_firstname"
+            android:id="@+id/sign_up_about"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:hint="Firstname"
+            android:hint="About You"
             android:textColor="#fff"
             android:textColorHint="#fff"
             android:textCursorDrawable="@null" />
-
         <com.example.stranger.me.widget.RobotoEditText
-            android:id="@+id/sign_up_lastname"
+            android:id="@+id/sign_up_country"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:hint="Lastname"
+            android:hint="Country"
             android:textColor="#fff"
             android:textColorHint="#fff"
             android:textCursorDrawable="@null" />
-
         <com.example.stranger.me.widget.RobotoEditText
-            android:id="@+id/sign_up_age"
+            android:id="@+id/sign_up_city"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:hint="Your Date Of Birth"
+            android:hint="City"
             android:textColor="#fff"
             android:textColorHint="#fff"
             android:textCursorDrawable="@null" />
-
 
     </LinearLayout>
+
 
 </RelativeLayout>

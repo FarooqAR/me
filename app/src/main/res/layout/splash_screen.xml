@@ -13,6 +13,7 @@
         android:layout_height="100dp"
         android:src="@drawable/ic_splash_logo" />
 
+
     <ProgressBar
         android:id="@+id/splash_progress"
         android:layout_width="30dp"

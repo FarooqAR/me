@@ -1,0 +1,77 @@
+<!--
+4th Screen in Profile setup
+1- user's profile picture
+-->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:theme="@style/MainTheme"
+    tools:context="com.example.stranger.me.fragments.SignUpFragmentScreen4">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_margin="@dimen/activity_horizontal_margin"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/sign_up_profile_pic"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginBottom="16dp"
+            android:src="@drawable/ic_account_circle" />
+
+        <com.example.stranger.me.widget.RobotoTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="Set your Profile Image"
+            android:textColor="#fff"
+            android:textSize="24sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/sign_up_browse_image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Browse"
+                android:textColor="#fff" />
+
+            <Button
+                android:id="@+id/sign_up_capture_image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Capture"
+                android:textColor="#fff" />
+        </LinearLayout>
+
+        <com.example.stranger.me.widget.RobotoTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+
+            android:text="OR"
+            android:textColor="#fff"
+            android:textSize="24sp" />
+
+        <Button
+            android:id="@+id/sign_up_select_avatar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Select From Avatars"
+            android:textColor="#fff" />
+    </LinearLayout>
+
+
+</RelativeLayout>
