@@ -89,6 +89,7 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
         //dont animate the splash if screen is rotated, just change the position of splash
         else if (!isLandscape() && isRotated) {
             splashContainer.setTranslationY(-top);
+            mViewPager.setVisibility(View.VISIBLE);
             splashProgress.setVisibility(View.INVISIBLE);
         }
         //animate the splash to left if screen is in landscape and is not yet rotated
@@ -110,6 +111,7 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
         else if (isLandscape() && isRotated) {
             splashContainer.setTranslationX(-left);
             splashProgress.setVisibility(View.INVISIBLE);
+            mViewPager.setVisibility(View.VISIBLE);
         }
 
     }
