@@ -16,7 +16,9 @@ import com.example.stranger.me.R;
 public class SignUpFragmentScreen1 extends Fragment {
 
     private Button mSignInButton;
-    private ViewChangeListener mListener;
+    private Button mSignUpButton;
+    private ViewChangeListener mListenerActivity;
+    private ViewChangeListener mListenerFragment;
     public SignUpFragmentScreen1() {
         // Required empty public constructor
     }
@@ -28,11 +30,20 @@ public class SignUpFragmentScreen1 extends Fragment {
         // Inflate the layout for this fragment
         View view= inflater.inflate(R.layout.fragment_sign_up_screen1, container, false);
         mSignInButton = (Button) view.findViewById(R.id.btn_sign_in);
-        mListener = (ViewChangeListener) getActivity();
+        mSignUpButton = (Button) view.findViewById(R.id.btn_sign_up);
+
+        mListenerActivity = (ViewChangeListener) getActivity();
+        mListenerFragment = (ViewChangeListener) getParentFragment();
         mSignInButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mListener.onClick(1);
+                mListenerActivity.onClick(1);
+            }
+        });
+        mSignUpButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mListenerFragment.onClick(1);
             }
         });
         return  view;
@@ -40,4 +51,5 @@ public class SignUpFragmentScreen1 extends Fragment {
     public interface ViewChangeListener{
         public void onClick(int i);
     }
+
 }
