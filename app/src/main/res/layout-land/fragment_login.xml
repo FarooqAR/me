@@ -55,11 +55,12 @@
             android:text="Sign In"
             android:textColor="#fff" />
 
-        <TextView
+        <com.example.stranger.me.widget.RobotoTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:gravity="center"
+            android:textColor="#fff"
             android:text="Or Sign in with:" />
 
         <LinearLayout
@@ -92,6 +93,7 @@
         <com.example.stranger.me.widget.RobotoTextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textColor="#fff"
             android:text="Don't have an account?"/>
         <Button
             android:layout_width="wrap_content"

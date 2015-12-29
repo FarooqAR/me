@@ -18,7 +18,7 @@
         android:gravity="center"
         android:orientation="vertical">
 
-        <ImageView
+        <com.example.stranger.me.widget.CircleImageView
             android:id="@+id/sign_up_profile_pic"
             android:layout_width="100dp"
             android:layout_height="100dp"

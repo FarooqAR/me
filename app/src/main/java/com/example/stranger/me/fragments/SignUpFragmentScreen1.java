@@ -1,6 +1,7 @@
 package com.example.stranger.me.fragments;
 
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -19,37 +20,53 @@ public class SignUpFragmentScreen1 extends Fragment {
     private Button mSignUpButton;
     private ViewChangeListener mListenerActivity;
     private ViewChangeListener mListenerFragment;
+    private View.OnClickListener mSignInButtonListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mListenerActivity.onClick(0);
+        }
+    };
+    private View.OnClickListener mSignUpButtonListener = new View.OnClickListener(){
+        @Override
+        public void onClick(View v) {
+            mListenerFragment.onClick(1);
+        }
+    };
     public SignUpFragmentScreen1() {
         // Required empty public constructor
     }
+    public static SignUpFragmentScreen1 newInstance(){
+        SignUpFragmentScreen1 fragment = new SignUpFragmentScreen1();
 
+        return fragment;
+    }
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if (activity instanceof ViewChangeListener) {
+            mListenerActivity = (ViewChangeListener) activity;
+        } else {
+            throw new ClassCastException(activity.toString() +
+                    " must implement ViewChangeListener");
+        }
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view= inflater.inflate(R.layout.fragment_sign_up_screen1, container, false);
+        View view = inflater.inflate(R.layout.fragment_sign_up_screen1, container, false);
         mSignInButton = (Button) view.findViewById(R.id.btn_sign_in);
         mSignUpButton = (Button) view.findViewById(R.id.btn_sign_up);
 
-        mListenerActivity = (ViewChangeListener) getActivity();
         mListenerFragment = (ViewChangeListener) getParentFragment();
-        mSignInButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mListenerActivity.onClick(1);
-            }
-        });
-        mSignUpButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mListenerFragment.onClick(1);
-            }
-        });
-        return  view;
+        mSignInButton.setOnClickListener(mSignInButtonListener);
+        mSignUpButton.setOnClickListener(mSignUpButtonListener);
+        return view;
     }
-    public interface ViewChangeListener{
-        public void onClick(int i);
+
+    public interface ViewChangeListener {
+        void onClick(int i);
     }
 
 }

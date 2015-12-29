@@ -1,6 +1,7 @@
 package com.example.stranger.me.fragments;
 
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
@@ -21,8 +22,8 @@ public class SignUpFragmentMain extends Fragment implements SignUpFragmentScreen
 
     private PagerAdapter mSignUpPagerAdapter;
     //fragments that will be shown in viewpager
-    private final Fragment[] mFragments = {new SignUpFragmentScreen1(),new SignUpFragmentScreen2(),
-            new SignUpFragmentScreen3(),new SignUpFragmentScreen4()};
+    private final Fragment[] mFragments = {SignUpFragmentScreen1.newInstance(),SignUpFragmentScreen2.newInstance(),
+            SignUpFragmentScreen3.newInstance(),SignUpFragmentScreen4.newInstance()};
 
     private NonSwipeableViewPager mSignUpViewPager;
 
@@ -101,17 +102,41 @@ public class SignUpFragmentMain extends Fragment implements SignUpFragmentScreen
     }
 
 
+    public static SignUpFragmentMain newInstance() {
+        SignUpFragmentMain fragment = new SignUpFragmentMain();
+
+        return fragment;
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if(activity instanceof SignUpPagerChangeListener) {
+            mSignUpPageChangeListener = (SignUpPagerChangeListener) activity;
+        }
+        else{
+            throw new ClassCastException(activity.toString() +
+                    " must implement SignUpPagerChangeListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mSignUpPageChangeListener = null;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         //get the layout of fragment_sign_up_main
         View view = inflater.inflate(R.layout.fragment_sign_up_main, container, false);
+        //initializing views
+        init(view);
 
         //initialize pager adapter for view pager
         mSignUpPagerAdapter = new PagerAdapter(getChildFragmentManager(),mFragments);
         mSignUpPageChangeListener = (SignUpPagerChangeListener) getActivity();
-        //initializing views
-        init(view);
 
         //set pagerAdapter to the viewpager
         mSignUpViewPager.setAdapter(mSignUpPagerAdapter);

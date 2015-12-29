@@ -1,6 +1,7 @@
 package com.example.stranger.me.fragments;
 
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -19,7 +20,16 @@ public class SignUpFragmentScreen3 extends Fragment {
         // Required empty public constructor
     }
 
+    public static SignUpFragmentScreen3 newInstance(){
+        SignUpFragmentScreen3 fragment = new SignUpFragmentScreen3();
 
+        return fragment;
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+    }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {

@@ -1,0 +1,38 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/nav_drawer_header"
+    android:layout_width="match_parent"
+    android:layout_height="140dp"
+    android:gravity="center_vertical"
+    android:background="@drawable/default_profile_wall"
+    android:orientation="horizontal">
+
+    <com.example.stranger.me.widget.CircleImageView
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:src="@drawable/default_profile_wall"/>
+
+    <LinearLayout
+        android:id="@+id/nav_drawer_header_profile_details"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <com.example.stranger.me.widget.RobotoTextViewBold
+            android:id="@+id/nav_drawer_header_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Username"
+            android:textColor="#fff" />
+
+        <com.example.stranger.me.widget.RobotoTextView
+            android:id="@+id/nav_drawer_header_email"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="username@gmail.com"
+            android:textColor="#fff" />
+    </LinearLayout>
+
+</LinearLayout>

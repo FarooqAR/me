@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
     private ImageView mProfileStepImage2;
     private ImageView mProfileStepImage3;
 
-    private Fragment[] mFragments = {new SignUpFragmentMain(),new LoginFragment()};
+    private Fragment[] mFragments = {LoginFragment.newInstance(),SignUpFragmentMain.newInstance()};
     private PagerAdapter mPagerAdapter;
     float top;
     float left;
@@ -86,6 +86,27 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
         super.onSaveInstanceState(outState);
         outState.putBoolean("isRotated", true);
     }
+    //check screen orientation
+    public boolean isLandscape() {
+        return this.getResources().getBoolean(R.bool.is_landscape);
+    }
+
+    public void init(){
+        mRoot = (RelativeLayout) findViewById(R.id.root_main);
+        mSplashContainer = (LinearLayout) findViewById(R.id.splashContainer);
+        mSplashProgress = (ProgressBar) findViewById(R.id.splash_progress);
+        mViewPager = (NonSwipeableViewPager) findViewById(R.id.signup_signin_viewpager);
+        mRingsContainer = (LinearLayout) findViewById(R.id.step_rings_container);
+        mProfileStep1 = (RelativeLayout) findViewById(R.id.step_1);
+        mProfileStep2 = (RelativeLayout) findViewById(R.id.step_2);
+        mProfileStep3 = (RelativeLayout) findViewById(R.id.step_3);
+        mProfileStepText1 = (TextView) findViewById(R.id.profile_step_text_1);
+        mProfileStepText2 = (TextView) findViewById(R.id.profile_step_text_2);
+        mProfileStepText3 = (TextView) findViewById(R.id.profile_step_text_3);
+        mProfileStepImage1 = (ImageView) findViewById(R.id.profile_step_img_1);
+        mProfileStepImage2 = (ImageView) findViewById(R.id.profile_step_img_2);
+        mProfileStepImage3 = (ImageView) findViewById(R.id.profile_step_img_3);
+    }
     public void animateSplash(int delay, final int duration) {
         //animate the splash to top if screen is in portrait and not yet rotated
         if (!isLandscape() && !isRotated) {
@@ -131,27 +152,6 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
             mViewPager.setVisibility(View.VISIBLE);
         }
 
-    }
-
-    //check screen orientation
-    public boolean isLandscape() {
-        return this.getResources().getBoolean(R.bool.is_landscape);
-    }
-    public void init(){
-        mRoot = (RelativeLayout) findViewById(R.id.root_main);
-        mSplashContainer = (LinearLayout) findViewById(R.id.splashContainer);
-        mSplashProgress = (ProgressBar) findViewById(R.id.splash_progress);
-        mViewPager = (NonSwipeableViewPager) findViewById(R.id.signup_signin_viewpager);
-        mRingsContainer = (LinearLayout) findViewById(R.id.step_rings_container);
-        mProfileStep1 = (RelativeLayout) findViewById(R.id.step_1);
-        mProfileStep2 = (RelativeLayout) findViewById(R.id.step_2);
-        mProfileStep3 = (RelativeLayout) findViewById(R.id.step_3);
-        mProfileStepText1 = (TextView) findViewById(R.id.profile_step_text_1);
-        mProfileStepText2 = (TextView) findViewById(R.id.profile_step_text_2);
-        mProfileStepText3 = (TextView) findViewById(R.id.profile_step_text_3);
-        mProfileStepImage1 = (ImageView) findViewById(R.id.profile_step_img_1);
-        mProfileStepImage2 = (ImageView) findViewById(R.id.profile_step_img_2);
-        mProfileStepImage3 = (ImageView) findViewById(R.id.profile_step_img_3);
     }
 
     @Override
@@ -200,7 +200,7 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
             case 3:
                 mRingsContainer.setPadding(0,0,0,0);
                 mRingsContainer.setVisibility(View.VISIBLE);//to avoid being invisible on rotation
-                mSplashContainer.setVisibility(View.GONE);
+                mSplashContainer.setVisibility(View.INVISIBLE);
                 mProfileStep1.setAlpha(1);
                 mProfileStep2.setAlpha(1);
                 mProfileStep3.setAlpha(1);

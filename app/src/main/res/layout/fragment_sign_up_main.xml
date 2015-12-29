@@ -26,19 +26,20 @@ next(finish) and skip buttons here
         android:layout_centerHorizontal="true"
         android:layout_alignParentBottom="true"
         android:orientation="horizontal">
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/btn_sign_up_next"
-            android:text="@string/next"
+            android:id="@+id/btn_sign_up_skip"
+            android:text="@string/skip"
             android:layout_marginBottom="16dp"
             android:textColor="#fff"
             android:visibility="gone"/>
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/btn_sign_up_skip"
-            android:text="@string/skip"
+            android:id="@+id/btn_sign_up_next"
+            android:text="@string/next"
             android:layout_marginBottom="16dp"
             android:textColor="#fff"
             android:visibility="gone"/>

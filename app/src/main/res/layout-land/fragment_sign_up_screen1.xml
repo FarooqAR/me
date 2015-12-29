@@ -54,12 +54,13 @@
             android:layout_marginTop="10dp"
             android:text="Sign Up"
             android:textColor="#fff" />
-        <TextView
+        <com.example.stranger.me.widget.RobotoTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:layout_marginTop="5dp"
-            android:text="Or SignUp with:"/>
+            android:textColor="#fff"
+            android:text="Or Sign up with:"/>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -90,6 +91,7 @@
         <com.example.stranger.me.widget.RobotoTextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textColor="#fff"
             android:text="Already a Member?"/>
         <Button
             android:layout_width="wrap_content"
