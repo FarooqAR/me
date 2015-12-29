@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="navlistitemicons">
+        <item>@drawable/ic_home_black</item>
+        <item>@drawable/ic_person_black</item>
+        <item>@drawable/ic_music_library</item>
+        <item>@drawable/ic_weather_black</item>
+        <item>@drawable/ic_group_black</item>
+        <item>@drawable/ic_chat_black</item>
+        <item>@drawable/ic_person_add_black</item>
+        <item>@drawable/ic_settings_black</item>
+    </string-array>
+</resources>

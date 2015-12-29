@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="navlistitems">
+        <item>Home</item>
+        <item>Profile</item>
+        <item>My Music</item>
+        <item>Weather</item>
+        <item>Groups</item>
+        <item>Chat</item>
+        <item>Find Contacts</item>
+        <item>Settings</item>
+    </string-array>
+</resources>

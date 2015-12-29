@@ -30,6 +30,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:hint="Your Email"
+            android:textStyle="normal"
             android:textCursorDrawable="@null"
             android:textColor="#fff"
             android:textColorHint="#fff"
@@ -46,7 +47,7 @@
             android:drawablePadding="5dp"
             android:inputType="textPassword"
             android:textColor="#fff"
-
+            android:textStyle="normal"
             android:textCursorDrawable="@null"
             android:textColorHint="#fff"
             android:drawableLeft="@drawable/ic_lock_white"/>
