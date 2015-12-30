@@ -19,7 +19,7 @@
         <!-- The navigation drawer -->
         <LinearLayout
             android:id="@+id/nav_drawer_container"
-            android:layout_width="320dp"
+            android:layout_width="400dp"
             android:background="#fff"
             android:layout_gravity="start"
             android:layout_height="match_parent"

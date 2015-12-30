@@ -4,16 +4,21 @@ import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.example.stranger.me.adapter.NavDrawerListAdapter;
+import com.example.stranger.me.fragments.HomeFragment;
 import com.example.stranger.me.modal.NavDrawerListItem;
 
 import java.util.ArrayList;
@@ -23,17 +28,26 @@ public class HomeActivity extends AppCompatActivity {
     private Toolbar mToolbar;
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
-    private String mToolbarTitle;
     private ListView mDrawerListView;
+    private String mToolbarTitle;
+    private FragmentManager mFragmentManager;
+    private TypedArray mNavListItems;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
         init();
-        mToolbarTitle = "Home";
+        if(savedInstanceState == null) {
+            mToolbarTitle = "Home";
+        }
+        else{
+            mToolbarTitle = savedInstanceState.getString("toolbarTitle");
+        }
+        mFragmentManager = getSupportFragmentManager();
+        mFragmentManager.beginTransaction().add(R.id.content_frame,HomeFragment.newInstance()).commit();
+
         DrawerListPopulateTask task = new DrawerListPopulateTask();
         task.execute();
-
         setupDrawer();
     }
     public void init(){
@@ -45,6 +59,7 @@ public class HomeActivity extends AppCompatActivity {
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
+        getSupportActionBar().setTitle(mToolbarTitle);
         mDrawerToggle = new ActionBarDrawerToggle(this,mDrawerLayout,R.string.drawer_open,R.string.drawer_close){
             @Override
             public void onDrawerOpened(View drawerView) {
@@ -71,6 +86,12 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("toolbarTitle",mToolbarTitle);
+    }
+
+    @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         mDrawerToggle.onConfigurationChanged(newConfig);
@@ -82,8 +103,21 @@ public class HomeActivity extends AppCompatActivity {
             case android.R.id.home:
                 mDrawerLayout.openDrawer(GravityCompat.START);
                 return true;
+            case R.id.menu_settings:
+                getSupportActionBar().setTitle("Settings");
+                return true;
+            case R.id.menu_logout:
+
+                return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu,menu);
+
+        return true;
     }
 
     public class DrawerListPopulateTask extends AsyncTask<Void,Void,ArrayList>{
@@ -101,6 +135,7 @@ public class HomeActivity extends AppCompatActivity {
                 NavDrawerListItem item =  new NavDrawerListItem(id,text);
                 list.add(item);
             }
+            mNavListItems = navlistitems;
             navlistitems.recycle();
             navlistitemiconids.recycle();
             return list;
@@ -111,6 +146,15 @@ public class HomeActivity extends AppCompatActivity {
             super.onPostExecute(arrayList);
             NavDrawerListAdapter adapter = new NavDrawerListAdapter(HomeActivity.this,R.layout.nav_drawer_listitem,arrayList);
             mDrawerListView.setAdapter(adapter);
+            mDrawerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
+                    TextView item = (TextView) view.findViewById(R.id.nav_drawer_item_text);
+                    mToolbarTitle = (String) item.getText();
+                    mDrawerLayout.closeDrawers();
+                }
+            });
+
         }
     }
 }

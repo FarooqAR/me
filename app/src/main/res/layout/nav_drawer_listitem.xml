@@ -6,8 +6,8 @@
     android:paddingRight="16dp"
     android:gravity="center_vertical">
     <ImageView
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:src="@drawable/ic_home_black"
         android:alpha="0.54"
         android:layout_marginRight="16dp"
@@ -16,6 +16,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Home"
+        android:layout_marginLeft="16dp"
         android:textColor="#000"
         android:textStyle="normal"
         android:alpha="0.87"
