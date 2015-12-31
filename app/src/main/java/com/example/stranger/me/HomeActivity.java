@@ -4,7 +4,9 @@ import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -31,7 +33,10 @@ public class HomeActivity extends AppCompatActivity {
     private ListView mDrawerListView;
     private String mToolbarTitle;
     private FragmentManager mFragmentManager;
+    private FragmentTransaction mTransaction;
     private TypedArray mNavListItems;
+    private int mIndex;
+    private Fragment[] mFragments;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,12 +44,17 @@ public class HomeActivity extends AppCompatActivity {
         init();
         if(savedInstanceState == null) {
             mToolbarTitle = "Home";
+            mIndex = 0;
         }
         else{
             mToolbarTitle = savedInstanceState.getString("toolbarTitle");
+            mIndex = savedInstanceState.getInt("currentFragmentIndex");
         }
         mFragmentManager = getSupportFragmentManager();
-        mFragmentManager.beginTransaction().add(R.id.content_frame,HomeFragment.newInstance()).commit();
+        mTransaction = mFragmentManager.beginTransaction();
+        mTransaction.replace(R.id.content_frame,
+                HomeFragment.newInstance())/*add mFragments[mIndex] instead*/
+                .commit();
 
         DrawerListPopulateTask task = new DrawerListPopulateTask();
         task.execute();
@@ -79,6 +89,31 @@ public class HomeActivity extends AppCompatActivity {
 
     }
 
+    public void setFragment(int index){
+        Fragment fragment = mFragments[index];
+        mIndex = index;
+        mTransaction.replace(R.id.content_frame,fragment)
+                .addToBackStack("Fragment#"+index);
+        mTransaction.commit();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+    }
+
+    @Override
+    public void onBackPressed() {
+
+        if(mDrawerLayout.isDrawerOpen(GravityCompat.START)){
+            mDrawerLayout.closeDrawers();
+        }
+        else {
+            super.onBackPressed();
+        }
+    }
+
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
@@ -88,7 +123,8 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString("toolbarTitle",mToolbarTitle);
+        outState.putString("toolbarTitle", mToolbarTitle);
+        outState.putInt("currentFragmentIndex", mIndex);
     }
 
     @Override
@@ -115,10 +151,12 @@ public class HomeActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu,menu);
+        getMenuInflater().inflate(R.menu.menu, menu);
 
         return true;
     }
+
+
 
     public class DrawerListPopulateTask extends AsyncTask<Void,Void,ArrayList>{
         TypedArray navlistitems;
@@ -152,6 +190,7 @@ public class HomeActivity extends AppCompatActivity {
                     TextView item = (TextView) view.findViewById(R.id.nav_drawer_item_text);
                     mToolbarTitle = (String) item.getText();
                     mDrawerLayout.closeDrawers();
+
                 }
             });
 
