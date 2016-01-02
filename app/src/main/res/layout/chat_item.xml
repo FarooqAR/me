@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <com.example.stranger.me.widget.CircleImageView
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_account_circle"
+        android:layout_alignParentLeft="true"
+        android:id="@+id/chat_msg_sender_image"/>
+    <android.support.v7.widget.CardView
+        android:layout_toRightOf="@+id/chat_msg_sender_image"
+        android:id="@+id/chat_msg_cardview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <RelativeLayout
+            android:id="@+id/msgContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:padding="10dp">
+
+            <com.example.stranger.me.widget.RobotoTextView
+                android:id="@+id/chat_msg_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textStyle="normal"
+                android:textColor="#000"
+                android:text="Message Message Message" />
+            <com.example.stranger.me.widget.RobotoTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/chat_msg_date"
+                android:paddingTop="3dp"
+                android:textStyle="normal"
+                android:text="Sunday 11:00 pm"
+                android:textSize="8sp"
+                android:layout_below="@+id/chat_msg_text"/>
+        </RelativeLayout>
+    </android.support.v7.widget.CardView>
+</RelativeLayout>
