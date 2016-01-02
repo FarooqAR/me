@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:theme="@style/MainTheme"
-    tools:context="com.example.stranger.me.fragments.SignUpFragmentScreen4">
+    tools:context="com.example.stranger.me.fragment.SignUpFragmentScreen4">
 
 
     <LinearLayout

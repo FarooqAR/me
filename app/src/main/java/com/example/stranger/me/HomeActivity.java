@@ -20,7 +20,14 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.stranger.me.adapter.NavDrawerListAdapter;
-import com.example.stranger.me.fragments.HomeFragment;
+import com.example.stranger.me.fragment.ChatFragment;
+import com.example.stranger.me.fragment.FindContactFragment;
+import com.example.stranger.me.fragment.GroupsFragment;
+import com.example.stranger.me.fragment.HomeFragment;
+import com.example.stranger.me.fragment.MusicFragment;
+import com.example.stranger.me.fragment.ProfileFragment;
+import com.example.stranger.me.fragment.SettingsFragment;
+import com.example.stranger.me.fragment.WeatherFragment;
 import com.example.stranger.me.modal.NavDrawerListItem;
 
 import java.util.ArrayList;
@@ -33,44 +40,58 @@ public class HomeActivity extends AppCompatActivity {
     private ListView mDrawerListView;
     private String mToolbarTitle;
     private FragmentManager mFragmentManager;
-    private FragmentTransaction mTransaction;
     private TypedArray mNavListItems;
     private int mIndex;
-    private Fragment[] mFragments;
+    private Fragment[] mFragments = {HomeFragment.newInstance(), ProfileFragment.newInstance(), MusicFragment.newInstance(),
+            WeatherFragment.newInstance(), GroupsFragment.newInstance(), ChatFragment.newInstance(), FindContactFragment.newInstance(),
+            SettingsFragment.newInstance()};
+    private String[] mFragmentTags = {"Home", "Profile", "My Music", "Weather", "Groups", "Chat", "Find Contacts", "Settings"};
+    private FragmentManager.OnBackStackChangedListener mBackStackListener = new FragmentManager.OnBackStackChangedListener() {
+        @Override
+        public void onBackStackChanged() {
+            Fragment currentFragment = mFragmentManager.findFragmentById(R.id.content_frame);
+            mToolbarTitle = currentFragment.getTag();
+            getSupportActionBar().setTitle(mToolbarTitle);
+        }
+    };
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
         init();
-        if(savedInstanceState == null) {
+        mFragmentManager = getSupportFragmentManager();
+        FragmentTransaction ft = mFragmentManager.beginTransaction();
+        if (savedInstanceState == null) {
             mToolbarTitle = "Home";
             mIndex = 0;
-        }
-        else{
+            ft.replace(R.id.content_frame,
+                    mFragments[mIndex], mFragmentTags[mIndex])
+                    .commit();
+        } else {
             mToolbarTitle = savedInstanceState.getString("toolbarTitle");
             mIndex = savedInstanceState.getInt("currentFragmentIndex");
         }
-        mFragmentManager = getSupportFragmentManager();
-        mTransaction = mFragmentManager.beginTransaction();
-        mTransaction.replace(R.id.content_frame,
-                HomeFragment.newInstance())/*add mFragments[mIndex] instead*/
-                .commit();
+
 
         DrawerListPopulateTask task = new DrawerListPopulateTask();
         task.execute();
         setupDrawer();
+        mFragmentManager.addOnBackStackChangedListener(mBackStackListener);
+
     }
-    public void init(){
+
+    public void init() {
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerListView = (ListView) findViewById(R.id.nav_drawer_list);
     }
-    public void setupDrawer(){
+
+    public void setupDrawer() {
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
         getSupportActionBar().setTitle(mToolbarTitle);
-        mDrawerToggle = new ActionBarDrawerToggle(this,mDrawerLayout,R.string.drawer_open,R.string.drawer_close){
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.drawer_open, R.string.drawer_close) {
             @Override
             public void onDrawerOpened(View drawerView) {
                 super.onDrawerOpened(drawerView);
@@ -89,12 +110,14 @@ public class HomeActivity extends AppCompatActivity {
 
     }
 
-    public void setFragment(int index){
+    public void setFragment(int index) {
         Fragment fragment = mFragments[index];
+        FragmentTransaction ft = mFragmentManager.beginTransaction();
         mIndex = index;
-        mTransaction.replace(R.id.content_frame,fragment)
-                .addToBackStack("Fragment#"+index);
-        mTransaction.commit();
+        ft.replace(R.id.content_frame, fragment, mFragmentTags[mIndex]);
+        ft.addToBackStack(null);
+        ft.commit();
+
     }
 
     @Override
@@ -106,10 +129,10 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
 
-        if(mDrawerLayout.isDrawerOpen(GravityCompat.START)){
+        if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
             mDrawerLayout.closeDrawers();
-        }
-        else {
+        } else {
+
             super.onBackPressed();
         }
     }
@@ -135,12 +158,17 @@ public class HomeActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()){
+        switch (item.getItemId()) {
             case android.R.id.home:
                 mDrawerLayout.openDrawer(GravityCompat.START);
                 return true;
             case R.id.menu_settings:
                 getSupportActionBar().setTitle("Settings");
+                mIndex = mFragments.length - 1;
+                FragmentTransaction ft = mFragmentManager.beginTransaction();
+                ft.replace(R.id.content_frame, mFragments[mIndex], mFragmentTags[mIndex]);
+                ft.addToBackStack(null);
+                ft.commit();
                 return true;
             case R.id.menu_logout:
 
@@ -157,20 +185,20 @@ public class HomeActivity extends AppCompatActivity {
     }
 
 
-
-    public class DrawerListPopulateTask extends AsyncTask<Void,Void,ArrayList>{
+    public class DrawerListPopulateTask extends AsyncTask<Void, Void, ArrayList> {
         TypedArray navlistitems;
         TypedArray navlistitemiconids;
         ArrayList<NavDrawerListItem> list;
+
         @Override
         protected ArrayList doInBackground(Void... params) {
             navlistitems = getResources().obtainTypedArray(R.array.navlistitems);
             navlistitemiconids = getResources().obtainTypedArray(R.array.navlistitemicons);
             list = new ArrayList<>();
-            for(int i = 0; i < navlistitems.length(); i++){
+            for (int i = 0; i < navlistitems.length(); i++) {
                 String text = navlistitems.getString(i);
                 int id = navlistitemiconids.getResourceId(i, 0);
-                NavDrawerListItem item =  new NavDrawerListItem(id,text);
+                NavDrawerListItem item = new NavDrawerListItem(id, text);
                 list.add(item);
             }
             mNavListItems = navlistitems;
@@ -182,7 +210,7 @@ public class HomeActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(ArrayList arrayList) {
             super.onPostExecute(arrayList);
-            NavDrawerListAdapter adapter = new NavDrawerListAdapter(HomeActivity.this,R.layout.nav_drawer_listitem,arrayList);
+            NavDrawerListAdapter adapter = new NavDrawerListAdapter(HomeActivity.this, R.layout.nav_drawer_listitem, arrayList);
             mDrawerListView.setAdapter(adapter);
             mDrawerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
@@ -190,7 +218,7 @@ public class HomeActivity extends AppCompatActivity {
                     TextView item = (TextView) view.findViewById(R.id.nav_drawer_item_text);
                     mToolbarTitle = (String) item.getText();
                     mDrawerLayout.closeDrawers();
-
+                    setFragment(position);
                 }
             });
 

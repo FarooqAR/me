@@ -13,9 +13,9 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.example.stranger.me.adapter.PagerAdapter;
-import com.example.stranger.me.fragments.LoginFragment;
-import com.example.stranger.me.fragments.SignUpFragmentMain;
-import com.example.stranger.me.fragments.SignUpFragmentScreen1;
+import com.example.stranger.me.fragment.LoginFragment;
+import com.example.stranger.me.fragment.SignUpFragmentMain;
+import com.example.stranger.me.fragment.SignUpFragmentScreen1;
 import com.example.stranger.me.widget.NonSwipeableViewPager;
 import com.firebase.client.Firebase;
 

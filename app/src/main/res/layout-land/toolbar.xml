@@ -7,6 +7,4 @@
     android:theme="@style/ThemeOverlay.AppCompat.Dark"
     app:contentInsetEnd="0dp"
     app:contentInsetStart="0dp"
-    android:elevation="4dp">
-
-</android.support.v7.widget.Toolbar>
+    android:elevation="4dp"/>

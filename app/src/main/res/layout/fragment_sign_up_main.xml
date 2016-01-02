@@ -13,7 +13,7 @@ next(finish) and skip buttons here
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:theme="@style/MainTheme"
-    tools:context="com.example.stranger.me.fragments.SignUpFragmentMain">
+    tools:context="com.example.stranger.me.fragment.SignUpFragmentMain">
 
     <com.example.stranger.me.widget.NonSwipeableViewPager
         android:layout_width="wrap_content"
