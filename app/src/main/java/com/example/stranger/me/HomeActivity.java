@@ -27,7 +27,6 @@ import com.example.stranger.me.fragment.HomeFragment;
 import com.example.stranger.me.fragment.MusicFragment;
 import com.example.stranger.me.fragment.ProfileFragment;
 import com.example.stranger.me.fragment.SettingsFragment;
-import com.example.stranger.me.fragment.WeatherFragment;
 import com.example.stranger.me.modal.NavDrawerListItem;
 
 import java.util.ArrayList;
@@ -43,9 +42,9 @@ public class HomeActivity extends AppCompatActivity {
     private TypedArray mNavListItems;
     private int mIndex;
     private Fragment[] mFragments = {HomeFragment.newInstance(), ProfileFragment.newInstance(), MusicFragment.newInstance(),
-            WeatherFragment.newInstance(), GroupsFragment.newInstance(), ChatFragment.newInstance(), FindContactFragment.newInstance(),
+             GroupsFragment.newInstance(), ChatFragment.newInstance(), FindContactFragment.newInstance(),
             SettingsFragment.newInstance()};
-    private String[] mFragmentTags = {"Home", "Profile", "My Music", "Weather", "Groups", "Chat", "Find Contacts", "Settings"};
+    private String[] mFragmentTags = {"Home", "Profile", "My Music", "Groups", "Chat", "Find Contacts", "Settings"};
     private FragmentManager.OnBackStackChangedListener mBackStackListener = new FragmentManager.OnBackStackChangedListener() {
         @Override
         public void onBackStackChanged() {
