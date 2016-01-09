@@ -1,14 +1,58 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<?xml version="1.0" encoding="utf-8"?>
+
+
+
+
+<!--
+Use collapsingToolbar instead
+-->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#f818"
+    xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.example.stranger.me.fragment.ProfileFragment">
-
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+   <!-- <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
-
-</FrameLayout>
+        android:layout_height="140dp"
+        android:id="@+id/profile_header">
+        <com.example.stranger.me.widget.CircleImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_margin="16dp"
+            android:id="@+id/user_profile_icon"
+            android:src="@drawable/ic_account_circle"
+            android:layout_centerVertical="true" />
+        <com.example.stranger.me.widget.RobotoTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/user_profile_name"
+            android:layout_toRightOf="@+id/user_profile_icon"
+            android:text="Farooq AR"
+            android:layout_centerVertical="true"
+            android:textSize="18sp"
+            android:textStyle="normal"
+            android:textColor="#fff"/>
+        <com.example.stranger.me.widget.RobotoTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/user_profile_about"
+            android:layout_toRightOf="@+id/user_profile_icon"
+            android:text="I'm Idle"
+            android:layout_centerVertical="true"
+            android:textSize="14sp"
+            android:textStyle="normal"
+            android:layout_below="@+id/user_profile_name"
+            android:textColor="#fff"/>
+    </RelativeLayout>-->
+   <android.support.v4.view.ViewPager
+       android:id="@+id/profile_viewpager"
+       android:layout_width="match_parent"
+       android:layout_height="match_parent">
+       <android.support.v4.view.PagerTabStrip
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+           android:id="@+id/profile_viewpager_indicator" />
+   </android.support.v4.view.ViewPager>
+</RelativeLayout>

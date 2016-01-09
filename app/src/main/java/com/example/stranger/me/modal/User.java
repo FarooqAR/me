@@ -11,7 +11,6 @@ public class User {
     private String id;
     private String firstName;
     private String lastName;
-    private String email;
     private String location;
     private String profileImg;
     private boolean online;
@@ -34,10 +33,6 @@ public class User {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public void setLocation(String location) {
@@ -63,10 +58,6 @@ public class User {
 
     public String getLastName() {
         return lastName;
-    }
-
-    public String getEmail() {
-        return email;
     }
 
     public String getLocation() {

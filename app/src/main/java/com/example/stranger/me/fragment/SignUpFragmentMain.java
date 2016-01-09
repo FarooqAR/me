@@ -18,7 +18,7 @@ import com.example.stranger.me.widget.NonSwipeableViewPager;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class SignUpFragmentMain extends Fragment implements SignUpFragmentScreen1.ViewChangeListener{
+public class SignUpFragmentMain extends Fragment implements SignUpFragmentScreen1.SignUpScreen1Listener{
 
     private PagerAdapter mSignUpPagerAdapter;
     //fragments that will be shown in viewpager
@@ -30,6 +30,8 @@ public class SignUpFragmentMain extends Fragment implements SignUpFragmentScreen
     private Button mNextBtn,mSkipBtn;
     private ImageButton mBackBtn;
     private SignUpPagerChangeListener mSignUpPageChangeListener;
+    private SignUpPagerChangeListener mSignUpPageChangeListenerScreen2;
+    private SignUpPagerChangeListener mSignUpPageChangeListenerScreen3;
 
 
     //initializing listeners
@@ -37,8 +39,15 @@ public class SignUpFragmentMain extends Fragment implements SignUpFragmentScreen
     private View.OnClickListener mNextBtnListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
+            if(mSignUpViewPager.getCurrentItem() == 1){//means its screen 2
+                mSignUpPageChangeListenerScreen2.onNextButtonClick(mSignUpViewPager, (Button) v);
+            }else if(mSignUpViewPager.getCurrentItem() == 2){//means its screen 3
+                mSignUpPageChangeListenerScreen3.onNextButtonClick(mSignUpViewPager, (Button) v);
+            }
+            else {
+                mSignUpViewPager.setCurrentItem(mSignUpViewPager.getCurrentItem() + 1);
+            }
 
-            mSignUpViewPager.setCurrentItem(mSignUpViewPager.getCurrentItem() + 1);
         }
     };
     /*Skip Button Listener*/
@@ -73,7 +82,7 @@ public class SignUpFragmentMain extends Fragment implements SignUpFragmentScreen
                     mSkipBtn.setVisibility(View.GONE);
                     break;
                 case 1:
-                    mBackBtn.setVisibility(View.VISIBLE);
+                    mBackBtn.setVisibility(View.GONE);
                     mNextBtn.setVisibility(View.VISIBLE);
                     mSkipBtn.setVisibility(View.GONE);
                     break;
@@ -124,6 +133,8 @@ public class SignUpFragmentMain extends Fragment implements SignUpFragmentScreen
     public void onDetach() {
         super.onDetach();
         mSignUpPageChangeListener = null;
+        mSignUpPageChangeListenerScreen2 = null;
+        mSignUpPageChangeListenerScreen3 = null;
     }
 
     @Override
@@ -141,7 +152,8 @@ public class SignUpFragmentMain extends Fragment implements SignUpFragmentScreen
         //set pagerAdapter to the viewpager
         mSignUpViewPager.setAdapter(mSignUpPagerAdapter);
         mSignUpViewPager.addOnPageChangeListener(mPageChangeListener);
-
+        mSignUpPageChangeListenerScreen2 = (SignUpPagerChangeListener) mFragments[1];
+        mSignUpPageChangeListenerScreen3 = (SignUpPagerChangeListener) mFragments[2];
         //set listeners to buttons
         mNextBtn.setOnClickListener(mNextBtnListener);
         mSkipBtn.setOnClickListener(mSkipBtnListener);
@@ -162,6 +174,7 @@ public class SignUpFragmentMain extends Fragment implements SignUpFragmentScreen
 
     public interface SignUpPagerChangeListener{
         public void onChange(int position);
+        public void onNextButtonClick(ViewPager viewPager,Button nextBtn);
     }
 
 

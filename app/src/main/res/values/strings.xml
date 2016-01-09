@@ -9,4 +9,6 @@
     <string name="drawer_close">Close drawer</string>
     <string name="settings">Settings</string>
     <string name="logout">Logout</string>
+    <string name="title_activity_googl_maps">MapActivity</string>
+    <string name="default_place_text">Select Your Location</string>
 </resources>

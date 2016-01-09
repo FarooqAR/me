@@ -48,11 +48,11 @@ user cannot skip it
             android:textCursorDrawable="@null" />
 
         <com.example.stranger.me.widget.RobotoEditText
-            android:id="@+id/sign_up_age"
+            android:id="@+id/sign_up_dob"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:hint="Your Date Of Birth"
+            android:hint="Your Age"
             android:textColor="#fff"
             android:textColorHint="#fff"
             android:textCursorDrawable="@null" />

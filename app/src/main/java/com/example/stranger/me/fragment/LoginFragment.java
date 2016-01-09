@@ -17,9 +17,10 @@ import com.example.stranger.me.R;
  * A simple {@link Fragment} subclass.
  */
 public class LoginFragment extends Fragment {
+    private static final String TAG = "LoginFragment";
     private Button mSignUpButton;
     private Button mSignInButton;
-    private SignUpFragmentScreen1.ViewChangeListener mListener;
+    private SignUpFragmentScreen1.SignUpScreen1Listener mListener;
     private View.OnClickListener mSignUpButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -40,14 +41,15 @@ public class LoginFragment extends Fragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        if(activity instanceof SignUpFragmentScreen1.ViewChangeListener){
-            mListener = (SignUpFragmentScreen1.ViewChangeListener) activity;
+        if(activity instanceof SignUpFragmentScreen1.SignUpScreen1Listener){
+            mListener = (SignUpFragmentScreen1.SignUpScreen1Listener) activity;
         }
         else{
             throw new ClassCastException(activity.toString()+
             " must implement SignUpFragmentScreen1.ViewChangeListener");
         }
     }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,

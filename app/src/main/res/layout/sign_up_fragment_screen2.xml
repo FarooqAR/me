@@ -14,15 +14,15 @@ user cannot skip it
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/activity_horizontal_margin"
         android:layout_centerInParent="true"
+        android:layout_margin="@dimen/activity_horizontal_margin"
         android:orientation="vertical">
 
         <com.example.stranger.me.widget.RobotoTextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Complete Your Profile"
             android:layout_gravity="center_horizontal"
+            android:text="Complete Your Profile"
             android:textColor="#fff"
             android:textSize="24sp" />
 
@@ -32,6 +32,7 @@ user cannot skip it
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:hint="Firstname"
+
             android:textColor="#fff"
             android:textColorHint="#fff"
             android:textCursorDrawable="@null" />
@@ -47,11 +48,12 @@ user cannot skip it
             android:textCursorDrawable="@null" />
 
         <com.example.stranger.me.widget.RobotoEditText
-            android:id="@+id/sign_up_age"
+            android:id="@+id/sign_up_dob"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:hint="Your Date Of Birth"
+            android:hint="Your Age"
+            android:inputType="number"
             android:textColor="#fff"
             android:textColorHint="#fff"
             android:textCursorDrawable="@null" />

@@ -3,9 +3,11 @@ package com.example.stranger.me;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -19,7 +21,7 @@ import com.example.stranger.me.fragment.SignUpFragmentScreen1;
 import com.example.stranger.me.widget.NonSwipeableViewPager;
 import com.firebase.client.Firebase;
 
-public class MainActivity extends AppCompatActivity implements SignUpFragmentScreen1.ViewChangeListener,SignUpFragmentMain.SignUpPagerChangeListener{
+public class MainActivity extends AppCompatActivity implements SignUpFragmentScreen1.SignUpScreen1Listener,SignUpFragmentMain.SignUpPagerChangeListener{
     private static final String TAG = "MainActivity";
     private LinearLayout mSplashContainer;
     private ProgressBar mSplashProgress;
@@ -67,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Firebase.setAndroidContext(this);
+
         if (savedInstanceState != null) {
             isRotated = savedInstanceState.getBoolean("isRotated");
         }
@@ -159,6 +162,14 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
         mViewPager.setCurrentItem(i);
     }
 
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mPagerAdapter = null;
+    }
+
     @Override
     public void onChange(int position) {
         switch(position){
@@ -213,6 +224,11 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
 
                 break;
         }
+    }
+
+    @Override
+    public void onNextButtonClick(ViewPager viewPager, Button nextBtn) {
+
     }
 }
 

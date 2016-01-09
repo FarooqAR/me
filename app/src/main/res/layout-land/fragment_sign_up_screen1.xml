@@ -46,14 +46,26 @@
             android:drawableLeft="@drawable/ic_lock_white"/>
 
 
-        <Button
-            android:id="@+id/btn_sign_up"
+        <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
             android:layout_marginTop="10dp"
-            android:text="Sign Up"
-            android:textColor="#fff" />
+            android:layout_gravity="center_horizontal">
+
+            <Button
+                android:id="@+id/btn_sign_up"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sign Up"
+                android:textColor="#fff" />
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/sign_up_progress"
+                android:layout_centerInParent="true"
+                android:visibility="gone"
+                style="@android:style/Widget.DeviceDefault.ProgressBar.Small"/>
+        </RelativeLayout>
         <com.example.stranger.me.widget.RobotoTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

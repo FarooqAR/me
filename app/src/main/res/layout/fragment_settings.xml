@@ -3,12 +3,5 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#a893"
-    tools:context="com.example.stranger.me.fragment.SettingsFragment">
-
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="Settings Fragment" />
-
-</FrameLayout>
+    android:id="@+id/settings_container"
+    tools:context="com.example.stranger.me.fragment.SettingsFragment"/>

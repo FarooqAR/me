@@ -31,7 +31,7 @@ import com.example.stranger.me.modal.NavDrawerListItem;
 
 import java.util.ArrayList;
 
-public class HomeActivity extends AppCompatActivity {
+public class HomeActivity extends AppCompatActivity{
     private static final String TAG = "HomeActivity";
     private Toolbar mToolbar;
     private ActionBarDrawerToggle mDrawerToggle;
@@ -50,6 +50,12 @@ public class HomeActivity extends AppCompatActivity {
         public void onBackStackChanged() {
             Fragment currentFragment = mFragmentManager.findFragmentById(R.id.content_frame);
             mToolbarTitle = currentFragment.getTag();
+            if(mToolbarTitle.equals("Profile")){
+                getSupportActionBar().hide();
+            }
+            else{
+                getSupportActionBar().show();
+            }
             getSupportActionBar().setTitle(mToolbarTitle);
         }
     };

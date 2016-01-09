@@ -29,23 +29,7 @@ public class FirebaseHelper {
     }
 
     public static ArrayList<String> getFriends(String userId) {
-        final ArrayList<String> friends = new ArrayList<String>();
-        getRoot().child("friends").child(userId).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot singleDataSnapshot :
-                        dataSnapshot.getChildren()) {
-                    String friendId = (String) singleDataSnapshot.getValue();
-                    friends.add(friendId);
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-        return friends;
+        return null;
     }
 
 }
