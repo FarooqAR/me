@@ -5,13 +5,12 @@ import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.Button;
+import android.widget.RelativeLayout;
 
 import com.example.stranger.me.R;
 import com.example.stranger.me.helper.FirebaseHelper;
@@ -30,11 +29,14 @@ import java.util.Map;
  * A simple {@link Fragment} subclass.
  */
 public class SignUpFragmentScreen3 extends Fragment implements SignUpFragmentMain.SignUpPagerChangeListener{
+    private static final String ABOUT = "about_text";
+    private static final String LOCATION = "location_text";
     private RobotoEditText mAbout;
     private AutoCompleteTextView mLocation;
-    private Button mNextBtn;//reference to next button in main fragment
-    private ViewPager mViewPager;//reference to viewpager in main fragment
-
+    private RelativeLayout mRootView;
+    private SignUpFragmentMain mMainFragment;
+    private String mAboutText;
+    private String mLocationText;
 
     public SignUpFragmentScreen3() {
         // Required empty public constructor
@@ -50,30 +52,48 @@ public class SignUpFragmentScreen3 extends Fragment implements SignUpFragmentMai
     public void onAttach(Activity activity) {
         super.onAttach(activity);
     }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(ABOUT, String.valueOf(mAbout.getText()));
+        outState.putString(LOCATION, String.valueOf(mLocation.getText()));
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view  = inflater.inflate(R.layout.sign_up_fragment_screen3, container, false);
         init(view);
+        if(savedInstanceState !=null){
+            mAboutText = savedInstanceState.getString(ABOUT);
+            mLocationText = savedInstanceState.getString(LOCATION);
+        }
+        mMainFragment = (SignUpFragmentMain) getParentFragment();
         new AutoCompleteCountriesTask().execute();
-
         return view;
     }
     public void init(View view){
         mAbout = (RobotoEditText) view.findViewById(R.id.sign_up_about);
         mLocation = (AutoCompleteTextView) view.findViewById(R.id.sign_up_location);
+        mRootView = (RelativeLayout) view.findViewById(R.id.root_view);
     }
     private boolean isDataValid(View v,String about,String location){
         if(about.equals("") || location.equals("")){
-            SnackbarHelper.create(v,"Fields cant be left empty");
+            SnackbarHelper.create(mRootView,"Fields cant be left empty").show();
         }
         else{
             if(about.length()>4 && about.length()<21) {
-                return true;
+                if(about.matches("[a-zA-Z ]+")) {
+                    return true;
+                }
+                else{
+                    SnackbarHelper.create(mRootView,"Special characters are not allowed").show();
+                }
             }
             else{
-                SnackbarHelper.create(v,"Tell about yourself in 5-20 letters");
+                SnackbarHelper.create(mRootView,"Tell about yourself in 5-20 letters").show();
             }
         }
         return false;
@@ -84,13 +104,22 @@ public class SignUpFragmentScreen3 extends Fragment implements SignUpFragmentMai
     }
 
     @Override
-    public void onNextButtonClick(ViewPager viewPager, Button nextBtn) {
-        String about = String.valueOf(mAbout.getText());
-        String location = String.valueOf(mLocation.getText());
-        mViewPager = viewPager;
-        mNextBtn  = nextBtn;
+    public void onNextButtonClick() {
+        String about;
+        String location;
+        if(mAbout != null) {
+            about = String.valueOf(mAbout.getText());
+            location = String.valueOf(mLocation.getText());
+        }
+        else{//get strings when views become null on rotation
+            about = mAboutText;
+            location = mLocationText;
+        }
+        if(mMainFragment == null) {//it will be null on rotation
+            mMainFragment = (SignUpFragmentMain) getParentFragment();
+        }
         if(isDataValid(mAbout,about,location)){
-            mNextBtn.setEnabled(false);
+            mMainFragment.disableButtons();
             new Screen3DataPopulateTask().execute(about,location);
         }
     }
@@ -115,12 +144,12 @@ public class SignUpFragmentScreen3 extends Fragment implements SignUpFragmentMai
                 @Override
                 public void onComplete(FirebaseError firebaseError, Firebase firebase) {
                     if(firebaseError == null){
-                        mViewPager.setCurrentItem(3);//move to next screen on success
+                        mMainFragment.setViewPagerItem(3);//move to next screen on success
                     }
                     else{
-                        SnackbarHelper.create(mAbout,firebaseError.getMessage());
+                        SnackbarHelper.create(mRootView,firebaseError.getMessage()).show();
                     }
-                    mNextBtn.setEnabled(true);
+                   mMainFragment.enableButtons();
                 }
             });
         }
@@ -144,7 +173,7 @@ public class SignUpFragmentScreen3 extends Fragment implements SignUpFragmentMai
         @Override
         protected void onPostExecute(ArrayList<String> strings) {
             super.onPostExecute(strings);
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),android.R.layout.simple_list_item_1,strings);
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),R.layout.autocomplete_item,strings);
             mLocation.setAdapter(adapter);
         }
     }

@@ -9,6 +9,7 @@ and user can skip it
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:theme="@style/MainTheme"
+    android:id="@+id/root_view"
     tools:context="com.example.stranger.me.fragment.SignUpFragmentScreen3">
 
     <LinearLayout
@@ -44,6 +45,8 @@ and user can skip it
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:hint="Your country"
+                android:textColorHint="#fff"
+                android:textColor="#fff"
                 android:singleLine="true" />
 
         </LinearLayout>

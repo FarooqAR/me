@@ -7,6 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:theme="@style/MainTheme"
+    android:id="@+id/rootView"
     tools:context="com.example.stranger.me.fragment.SignUpFragmentScreen4">
 
 
@@ -41,18 +42,12 @@
             android:gravity="center_horizontal"
             android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/sign_up_browse_image"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Browse"
-                android:textColor="#fff" />
 
             <Button
                 android:id="@+id/sign_up_capture_image"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Capture"
+                android:text="Pick"
                 android:textColor="#fff" />
         </LinearLayout>
 
