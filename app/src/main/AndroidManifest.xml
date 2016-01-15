@@ -8,7 +8,10 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-
+    <!-- USE_CREDENTIALS is necessary for Google+ login -->
+    <uses-permission android:name="android.permission.USE_CREDENTIALS" />
+    <!-- GET_ACCOUNTS is necessary to display email address of logged in user. This permission is optional -->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <!--
          The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
          Google Maps Android API v2, but you must specify either coarse or fine
@@ -16,13 +19,24 @@
     -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="true" />
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <provider
+            android:name="com.facebook.FacebookContentProvider"
+            android:authorities="com.facebook.app.FacebookContentProvider909279109140305"
+            android:exported="true" />
+
+        <activity android:name=".activity.MainActivity" android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -31,7 +45,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".HomeActivity" />
+        <activity android:name=".activity.HomeActivity" />
+        <activity
+            android:name="com.facebook.FacebookActivity"
+            android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+            android:label="@string/app_name"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="@string/fb_app_id" />
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
@@ -44,6 +67,9 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
 
+        <activity android:name=".activity.AvatarActivity" />
+        <activity android:name="com.soundcloud.android.crop.CropImageActivity" />
+        <activity android:name=".activity.FacebookActivity"/>
     </application>
 
 </manifest>
