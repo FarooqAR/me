@@ -1,5 +1,6 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:theme="@style/MainTheme"
@@ -47,23 +48,36 @@
             android:textColorHint="#fff"
             android:textCursorDrawable="@null" />
 
-
-        <Button
-            android:id="@+id/btn_sign_in"
+        <RelativeLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
             android:layout_marginTop="10dp"
-            android:text="Sign In"
-            android:textColor="#fff" />
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/btn_sign_in"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="Sign In"
+                android:textColor="#fff" />
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/sign_in_progress"
+                android:visibility="gone"
+                android:layout_centerInParent="true"
+                style="@android:style/Widget.DeviceDefault.ProgressBar.Small"/>
+
+        </RelativeLayout>
+
 
         <com.example.stranger.me.widget.RobotoTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:gravity="center"
-            android:textColor="#fff"
-            android:text="Or Sign in with:" />
+            android:text="Or Sign in with:"
+            android:textColor="#fff" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -72,6 +86,7 @@
             android:orientation="horizontal">
 
             <ImageButton
+                android:id="@+id/sign_in_google_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="#0000"
@@ -79,6 +94,7 @@
                 android:src="@drawable/google_plus_icon" />
 
             <ImageButton
+                android:id="@+id/sign_in_fb_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="#0000"
@@ -86,22 +102,25 @@
                 android:src="@drawable/fb_icon" />
         </LinearLayout>
     </LinearLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:gravity="center"
         android:orientation="horizontal">
+
         <com.example.stranger.me.widget.RobotoTextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#fff"
-            android:text="Don't have an account?"/>
+            android:text="Don't have an account?"
+            android:textColor="#fff" />
+
         <Button
+            android:id="@+id/btn_sign_up"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#fff"
-            android:id="@+id/btn_sign_up"
-            android:text="Sign UP"/>
+            android:text="Sign UP"
+            android:textColor="#fff" />
     </LinearLayout>
 </RelativeLayout>

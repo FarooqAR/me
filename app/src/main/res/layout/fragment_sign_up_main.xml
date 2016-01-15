@@ -35,14 +35,26 @@ next(finish) and skip buttons here
             android:layout_marginBottom="16dp"
             android:textColor="#fff"
             android:visibility="gone"/>
-        <Button
+        <RelativeLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/btn_sign_up_next"
-            android:text="@string/next"
-            android:layout_marginBottom="16dp"
-            android:textColor="#fff"
-            android:visibility="gone"/>
+            android:layout_height="wrap_content">
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/btn_sign_up_next"
+                android:text="@string/next"
+                android:layout_marginBottom="16dp"
+                android:textColor="#fff"
+                android:visibility="gone"/>
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/sign_up_next_progress"
+                android:layout_centerInParent="true"
+                android:visibility="gone"
+                style="@android:style/Widget.DeviceDefault.ProgressBar.Small"/>
+        </RelativeLayout>
+
     </LinearLayout>
 
     <ImageButton

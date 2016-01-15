@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:theme="@style/MainTheme"
-
+    android:id="@+id/root_view"
     tools:context="com.example.stranger.me.fragment.SignUpFragment">
 
     <LinearLayout
@@ -89,6 +89,7 @@
             <ImageButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:id="@+id/sign_up_google_btn"
                 android:src="@drawable/google_plus_icon"
                 android:background="#0000"
                 android:padding="5dp"/>
@@ -96,6 +97,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/fb_icon"
+                android:id="@+id/sign_up_fb_btn"
                 android:background="#0000"
                 android:padding="5dp"/>
         </LinearLayout>

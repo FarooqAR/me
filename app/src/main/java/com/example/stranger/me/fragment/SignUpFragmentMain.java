@@ -2,6 +2,7 @@ package com.example.stranger.me.fragment;
 
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
@@ -10,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
 
 import com.example.stranger.me.R;
 import com.example.stranger.me.adapter.PagerAdapter;
@@ -22,17 +24,24 @@ public class SignUpFragmentMain extends Fragment implements SignUpFragmentScreen
 
     private PagerAdapter mSignUpPagerAdapter;
     //fragments that will be shown in viewpager
-    private final Fragment[] mFragments = {SignUpFragmentScreen1.newInstance(),SignUpFragmentScreen2.newInstance(),
+    private  Fragment[] mFragments = {SignUpFragmentScreen1.newInstance(),SignUpFragmentScreen2.newInstance(),
             SignUpFragmentScreen3.newInstance(),SignUpFragmentScreen4.newInstance()};
 
     private NonSwipeableViewPager mSignUpViewPager;
 
     private Button mNextBtn,mSkipBtn;
     private ImageButton mBackBtn;
+    private ProgressBar mNextProgress;
+
+    //the other screens have to listen for changes in viewpager
     private SignUpPagerChangeListener mSignUpPageChangeListener;
     private SignUpPagerChangeListener mSignUpPageChangeListenerScreen2;
     private SignUpPagerChangeListener mSignUpPageChangeListenerScreen3;
+    private SignUpPagerChangeListener mSignUpPageChangeListenerScreen4;
 
+    public SignUpFragmentScreen4 getScreen4(){
+        return (SignUpFragmentScreen4) mFragments[3];
+    }
 
     //initializing listeners
     /*Next button listener*/
@@ -40,9 +49,11 @@ public class SignUpFragmentMain extends Fragment implements SignUpFragmentScreen
         @Override
         public void onClick(View v) {
             if(mSignUpViewPager.getCurrentItem() == 1){//means its screen 2
-                mSignUpPageChangeListenerScreen2.onNextButtonClick(mSignUpViewPager, (Button) v);
+                mSignUpPageChangeListenerScreen2.onNextButtonClick();
             }else if(mSignUpViewPager.getCurrentItem() == 2){//means its screen 3
-                mSignUpPageChangeListenerScreen3.onNextButtonClick(mSignUpViewPager, (Button) v);
+                mSignUpPageChangeListenerScreen3.onNextButtonClick();
+            }else if(mSignUpViewPager.getCurrentItem() == 3) {//means its screen 4
+                mSignUpPageChangeListenerScreen4.onNextButtonClick();
             }
             else {
                 mSignUpViewPager.setCurrentItem(mSignUpViewPager.getCurrentItem() + 1);
@@ -91,6 +102,7 @@ public class SignUpFragmentMain extends Fragment implements SignUpFragmentScreen
                     mNextBtn.setVisibility(View.VISIBLE);//to avoid being invisible on rotation
                     mBackBtn.setVisibility(View.VISIBLE);//to avoid being invisible on rotation
                     mNextBtn.setText("NEXT");
+
                     break;
                 case 3:
                     mNextBtn.setText("FINISH");
@@ -118,6 +130,13 @@ public class SignUpFragmentMain extends Fragment implements SignUpFragmentScreen
     }
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        //initialize pager adapter for view pager
+        mSignUpPagerAdapter = new PagerAdapter(getChildFragmentManager(),mFragments);
+    }
+
+    @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         if(activity instanceof SignUpPagerChangeListener) {
@@ -135,6 +154,25 @@ public class SignUpFragmentMain extends Fragment implements SignUpFragmentScreen
         mSignUpPageChangeListener = null;
         mSignUpPageChangeListenerScreen2 = null;
         mSignUpPageChangeListenerScreen3 = null;
+        mSignUpPageChangeListenerScreen4 = null;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode>=0 && requestCode == SignUpFragmentScreen4.REQUEST_AVATAR){
+            mFragments[3].onActivityResult(requestCode,resultCode,data);
+        }
+        else if(requestCode>=0 && requestCode == SignUpFragmentScreen4.REQUEST_IMAGE_CAPTURE){
+            mFragments[3].onActivityResult(requestCode,resultCode,data);
+        }
+        else if(requestCode>=0 && requestCode == SignUpFragmentScreen4.RESULT_BROWSE_IMAGE){
+            mFragments[3].onActivityResult(requestCode,resultCode,data);
+        }
+        else if(requestCode>=0 && requestCode == SignUpFragmentScreen1.REQUEST_FB_SIGNUP) {
+            mFragments[0].onActivityResult(requestCode, resultCode, data);
+        }
+
     }
 
     @Override
@@ -145,15 +183,17 @@ public class SignUpFragmentMain extends Fragment implements SignUpFragmentScreen
         //initializing views
         init(view);
 
-        //initialize pager adapter for view pager
-        mSignUpPagerAdapter = new PagerAdapter(getChildFragmentManager(),mFragments);
+
         mSignUpPageChangeListener = (SignUpPagerChangeListener) getActivity();
 
         //set pagerAdapter to the viewpager
         mSignUpViewPager.setAdapter(mSignUpPagerAdapter);
+
+
         mSignUpViewPager.addOnPageChangeListener(mPageChangeListener);
         mSignUpPageChangeListenerScreen2 = (SignUpPagerChangeListener) mFragments[1];
         mSignUpPageChangeListenerScreen3 = (SignUpPagerChangeListener) mFragments[2];
+        mSignUpPageChangeListenerScreen4 = (SignUpPagerChangeListener) mFragments[3];
         //set listeners to buttons
         mNextBtn.setOnClickListener(mNextBtnListener);
         mSkipBtn.setOnClickListener(mSkipBtnListener);
@@ -161,20 +201,38 @@ public class SignUpFragmentMain extends Fragment implements SignUpFragmentScreen
 
         return view;
     }
+    @Override
+    public void onClick(int i) {
+        mSignUpViewPager.setCurrentItem(i);
+    }
     private void init(View view){
         mSignUpViewPager = (NonSwipeableViewPager) view.findViewById(R.id.sign_up_viewpager);
         mNextBtn = (Button) view.findViewById(R.id.btn_sign_up_next);
         mSkipBtn = (Button) view.findViewById(R.id.btn_sign_up_skip);
         mBackBtn = (ImageButton) view.findViewById(R.id.btn_sign_up_back);
+        mNextProgress = (ProgressBar) view.findViewById(R.id.sign_up_next_progress);
     }
-    @Override
-    public void onClick(int i) {
-        mSignUpViewPager.setCurrentItem(i);
+    public void disableButtons(){
+        mNextBtn.setText("");
+        mBackBtn.setEnabled(false);
+        mNextBtn.setEnabled(false);
+        mSkipBtn.setEnabled(false);
+        mNextProgress.setVisibility(View.VISIBLE);
+    }
+    public void enableButtons(){
+        mNextBtn.setText("Next");
+        mBackBtn.setEnabled(true);
+        mNextBtn.setEnabled(true);
+        mSkipBtn.setEnabled(true);
+        mNextProgress.setVisibility(View.GONE);
+    }
+    public void setViewPagerItem(int position){
+        mSignUpViewPager.setCurrentItem(position);
     }
 
     public interface SignUpPagerChangeListener{
         public void onChange(int position);
-        public void onNextButtonClick(ViewPager viewPager,Button nextBtn);
+        public void onNextButtonClick();
     }
 
 

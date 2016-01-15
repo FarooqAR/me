@@ -1,6 +1,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:id="@+id/root_view"
     android:layout_height="match_parent"
     android:theme="@style/MainTheme"
     tools:context="com.example.stranger.me.fragment.LoginFragment">
@@ -46,14 +47,28 @@
             android:textCursorDrawable="@null" />
 
 
-        <Button
-            android:id="@+id/btn_sign_in"
+        <RelativeLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
             android:layout_marginTop="10dp"
-            android:text="Sign In"
-            android:textColor="#fff" />
+            android:layout_gravity="center_horizontal"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/btn_sign_in"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="Sign In"
+                android:textColor="#fff" />
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/sign_in_progress"
+                android:visibility="gone"
+                android:layout_centerInParent="true"
+                style="@android:style/Widget.DeviceDefault.ProgressBar.Small"/>
+
+        </RelativeLayout>
 
         <com.example.stranger.me.widget.RobotoTextView
             android:layout_width="match_parent"
@@ -74,12 +89,14 @@
                 android:layout_height="wrap_content"
                 android:background="#0000"
                 android:padding="5dp"
+                android:id="@+id/sign_up_google_btn"
                 android:src="@drawable/google_plus_icon" />
 
             <ImageButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="#0000"
+                android:id="@+id/sign_in_fb_btn"
                 android:padding="5dp"
                 android:src="@drawable/fb_icon" />
         </LinearLayout>

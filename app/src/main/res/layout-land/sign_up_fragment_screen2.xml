@@ -8,6 +8,7 @@ user cannot skip it
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:theme="@style/MainTheme"
+    android:id="@+id/root_view"
     tools:context="com.example.stranger.me.fragment.SignUpFragmentScreen2">
 
 
