@@ -1,35 +1,291 @@
 package com.example.stranger.me.helper;
 
+import android.os.AsyncTask;
+
+import com.example.stranger.me.modal.Friend;
+import com.example.stranger.me.modal.FriendRequest;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
-import com.firebase.client.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by Farooq on 11/14/2015.
  */
 public class FirebaseHelper {
-    private static Firebase root;
-    private static String AUTH_ID;
+    public static final String FRIEND_REQUESTS_KEY = "friend_requests";
+    private static Firebase ROOT = null;
+    private static String AUTH_ID = null;
+    private static DataSnapshot USERS = null;//all users
+    public static ArrayList<FriendRequest> friendRequests = null;//requests to authenticated user
+    public static ArrayList<Friend> friends = null;//friends of authenticated user
+    private static DataSnapshot FRIEND_REQUESTS = null;//friend requests node
+
+
+    public static void setFriendRequests(DataSnapshot friendRequests) {
+        FRIEND_REQUESTS = friendRequests;
+    }
+
+    public static ArrayList<Friend> getFriends() {
+        return friends;
+    }
+
+    public static void setFriends(ArrayList<Friend> friends) {
+        FirebaseHelper.friends = friends;
+    }
+
+
+    public static ArrayList<FriendRequest> getFriendRequests() {
+        return friendRequests;
+    }
+
+    public static DataSnapshot getFriendRequestsSnapshot() {
+        return FRIEND_REQUESTS;
+    }
+
+    public static void setFriendRequests(ArrayList<FriendRequest> friendRequests) {
+        FirebaseHelper.friendRequests = friendRequests;
+    }
+
+    //update friend request list
+    public static void addFriendRequest(FriendRequest request) {
+        new AddFriendRequestTask().execute(request);
+    }
+
+    public static void removeFriendRequest(String id) {
+        new RemoveFriendRequestTask().execute(id);
+    }
+
+    //update friend list
+    public static void addFriend(Friend friend) {
+        new AddFriendTask().execute(friend);
+    }
+
+    public static void removeFriend(String id) {
+        new RemoveFriendTask().execute(id);
+    }
 
     public static Firebase getRoot() {
-        if (root == null) {
-            root = new Firebase("https://app-me.firebaseio.com");
+        if (ROOT == null) {
+            ROOT = new Firebase("https://app-me.firebaseio.com");
         }
-        return root;
+        return ROOT;
+    }
+
+    public static void setUsers(DataSnapshot snapshot) {
+        USERS = snapshot;
     }
 
     public static String getAuthId() {
         if (AUTH_ID == null) {
-            AUTH_ID = getRoot().getAuth().getUid();
+            if (FirebaseHelper.getRoot().getAuth() != null &&
+                    (FirebaseHelper.getRoot().getAuth().getProvider().equals("facebook") ||
+                            FirebaseHelper.getRoot().getAuth().getProvider().equals("google"))) {
+                AUTH_ID = (String) getRoot().getAuth().getProviderData().get("id");
+            } else if (getRoot().getAuth() != null) {
+                AUTH_ID = getRoot().getAuth().getUid();
+            }
         }
         return AUTH_ID;
     }
 
-    public static ArrayList<String> getFriends(String userId) {
-        return null;
+    public static void setAuthId(String id) {
+        AUTH_ID = id;
     }
 
+    public static boolean isUser(String id) {
+        return getUsers().child(id).exists();
+    }
+
+
+    public static boolean isFriend(String id) {//push key in friends list
+        boolean isFriend = false;
+        try {
+            isFriend = new GetFriendTask().execute(id).get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        return isFriend;
+    }
+
+    public static DataSnapshot getUsers() {
+        return USERS;
+    }
+
+    //whether the given user has sent friend request to authenticated user
+    public static boolean isRequested(String userId) {
+        boolean isRequested = false;
+        try {
+            isRequested = new GetFriendRequestTask().execute(userId).get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        return isRequested;
+    }
+
+    //whether the user has sent friend request to given user
+    public static boolean isRequestSent(String userId) {
+        boolean isRequestSent = false;
+        try {
+            isRequestSent = new GetUserRequestTask().execute(userId).get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        return isRequestSent;
+    }
+
+    public static String getFriendKey(String id) {
+        String key = null;
+        try {
+            key = new GetFriendKeyTask().execute(id).get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+
+        return key;
+    }
+
+    public static void unFriend(final String id, final Firebase.CompletionListener listener) {
+        //remove given user from friends of current user
+
+        getRoot().child("friends").child(getAuthId()).child(getFriendKey(id)).removeValue(new Firebase.CompletionListener() {
+            @Override
+            public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                //first remove current user from friends of given user
+                getRoot().child("friends").child(getFriendKey(id)).child(getAuthId()).removeValue(listener);
+            }
+        });
+    }
+
+    public static void sendFriendRequest(final String id, Firebase.CompletionListener listener) {
+        if(!id.equals(getAuthId()))//send request only if given id is not equal to auth id
+        getRoot().child(FRIEND_REQUESTS_KEY).child(id).child(getAuthId()).child("seen").setValue(false, listener);
+    }
+
+    public static void confirmAsFriend(final String id, final Firebase.CompletionListener listener) {
+        //first remove the given user request from current user's friend requests list
+        FirebaseHelper.getRoot().child(FirebaseHelper.FRIEND_REQUESTS_KEY)
+                .child(FirebaseHelper.getAuthId()).child(id).removeValue(new Firebase.CompletionListener() {
+            @Override
+            public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                if (firebaseError == null)
+                    //then add the authenticated user as a friend of given user
+                    FirebaseHelper.getRoot().child("friends").child(FirebaseHelper.getAuthId()).push().setValue(id, new Firebase.CompletionListener() {
+                        @Override
+                        public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                            if (firebaseError == null) {
+                                //add then add the given user as a friend of authenticated user
+                                FirebaseHelper.getRoot().child("friends").child(id).push().setValue(FirebaseHelper.getAuthId(), listener);
+                            }
+                        }
+                    });
+            }
+        });
+    }
+
+
+    //it will be executed when the friend request of a user to authenticated user is added
+    private static class AddFriendRequestTask extends AsyncTask<FriendRequest, Void, Void> {
+
+        @Override
+        protected Void doInBackground(FriendRequest... params) {
+            friendRequests.add(params[0]);
+            return null;
+        }
+    }
+
+    //it will be executed when the friend request from a user to authenticated user is removed
+    private static class RemoveFriendRequestTask extends AsyncTask<String, Void, Void> {
+        @Override
+        protected Void doInBackground(String... params) {
+            for (FriendRequest request : friendRequests) {
+                if (request.getId().equals(params[0])) {
+                    friendRequests.remove(request);
+                }
+            }
+            return null;
+        }
+    }
+
+    //it will be executed to check whether the given user has sent friend request to authenticated user
+    private static class GetFriendRequestTask extends AsyncTask<String, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(String... params) {
+            String id = params[0];
+            for (FriendRequest request : friendRequests) {
+                if (request.getId().equals(id))
+                    return true;
+            }
+            return false;
+        }
+    }
+
+    //it will be executed when the friend of authenticated user is added
+    private static class AddFriendTask extends AsyncTask<Friend, Void, Void> {
+        @Override
+        protected Void doInBackground(Friend... params) {
+            friends.add(params[0]);
+            return null;
+        }
+    }
+
+    //it will be executed when the friend of authenticated user is removed
+    private static class RemoveFriendTask extends AsyncTask<String, Void, Void> {
+        @Override
+        protected Void doInBackground(String... params) {
+            for (Friend friend : friends) {
+                if (friend.getId().equals(params[0])) {
+                    friends.remove(friend);
+                }
+            }
+            return null;
+        }
+    }
+
+    //it will be executed to check if the given user is a friend of authenticated user
+    private static class GetFriendTask extends AsyncTask<String, Void, Boolean> {
+        @Override
+        protected Boolean doInBackground(String... params) {
+            String id = params[0];
+            for (Friend friend : friends) {
+                if (friend.getId().equals(id))
+                    return true;
+            }
+            return false;
+        }
+    }
+
+    private static class GetUserRequestTask extends AsyncTask<String, Void, Boolean> {
+        @Override
+        protected Boolean doInBackground(String... params) {
+            String id = params[0];
+            //friend requests of given user
+            Map<String,Object> contactFriendRequests = null;
+            if (getFriendRequestsSnapshot().child(id) != null) {
+                contactFriendRequests = (Map<String, Object>) getFriendRequestsSnapshot().child(id).getValue();
+            } else
+                return false;
+            if (contactFriendRequests != null)
+                return contactFriendRequests.containsKey(getAuthId());
+            return false;
+        }
+    }
+
+    private static class GetFriendKeyTask extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... params) {
+            String id = params[0];
+
+            for (Friend friend : friends) {
+                if (friend.getId().equals(id)) {
+                    return friend.getKey();
+                }
+            }
+            return null;
+        }
+    }
 }
