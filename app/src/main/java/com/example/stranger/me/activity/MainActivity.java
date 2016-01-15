@@ -1,28 +1,37 @@
-package com.example.stranger.me;
+package com.example.stranger.me.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewTreeObserver;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.example.stranger.me.R;
 import com.example.stranger.me.adapter.PagerAdapter;
 import com.example.stranger.me.fragment.LoginFragment;
 import com.example.stranger.me.fragment.SignUpFragmentMain;
 import com.example.stranger.me.fragment.SignUpFragmentScreen1;
+import com.example.stranger.me.helper.FirebaseHelper;
 import com.example.stranger.me.widget.NonSwipeableViewPager;
+import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
+import com.firebase.client.AuthData;
+import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
+import com.firebase.client.ValueEventListener;
+import com.soundcloud.android.crop.Crop;
 
-public class MainActivity extends AppCompatActivity implements SignUpFragmentScreen1.SignUpScreen1Listener,SignUpFragmentMain.SignUpPagerChangeListener{
+public class MainActivity extends AppCompatActivity implements SignUpFragmentScreen1.SignUpScreen1Listener, SignUpFragmentMain.SignUpPagerChangeListener {
     private static final String TAG = "MainActivity";
+
     private LinearLayout mSplashContainer;
     private ProgressBar mSplashProgress;
     private NonSwipeableViewPager mViewPager;
@@ -38,13 +47,29 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
     private ImageView mProfileStepImage2;
     private ImageView mProfileStepImage3;
 
-    private Fragment[] mFragments = {LoginFragment.newInstance(),SignUpFragmentMain.newInstance()};
+    private Fragment[] mFragments = {LoginFragment.newInstance(), SignUpFragmentMain.newInstance()};
     private PagerAdapter mPagerAdapter;
     float top;
     float left;
     int splashH;
     boolean isRotated;
     FragmentTransaction transaction;
+    private Firebase.AuthStateListener mAuthStateListener = new Firebase.AuthStateListener() {
+        @Override
+        public void onAuthStateChanged(AuthData authData) {
+
+            if (authData == null) {
+                animateSplash(0, 500);
+                FirebaseHelper.getRoot().removeAuthStateListener(mAuthStateListener);
+            } else {
+                animateSplash(10000, 500);
+                Intent i = new Intent(MainActivity.this, HomeActivity.class);
+                startActivity(i);
+                finish();
+            }
+
+        }
+    };
     private ViewTreeObserver.OnGlobalLayoutListener mLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
         public void onGlobalLayout() {
             mRoot.getViewTreeObserver().removeOnGlobalLayoutListener(this);
@@ -52,14 +77,15 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
             int[] locations = new int[2];
             mSplashContainer.getLocationOnScreen(locations);
             top = locations[0];
-            top = top + top/3;
+            top = top + top / 3;
             left = locations[1];
-            left = left + left/2;
-            animateSplash(1000,500);
+            left = left + left / 2;
+            FirebaseHelper.getRoot().addAuthStateListener(mAuthStateListener);
+
 
             splashH = mSplashContainer.getHeight();
-            if(!isLandscape())
-            mRingsContainer.setPadding(0, splashH, 0, 0);
+            if (!isLandscape())
+                mRingsContainer.setPadding(0, splashH, 0, 0);
         }
 
     };
@@ -69,14 +95,26 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Firebase.setAndroidContext(this);
+        FacebookSdk.sdkInitialize(this);
 
         if (savedInstanceState != null) {
             isRotated = savedInstanceState.getBoolean("isRotated");
         }
+        FirebaseHelper.getRoot().child("users").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                FirebaseHelper.setUsers(dataSnapshot);
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
         init();
         transaction = getSupportFragmentManager().beginTransaction();
 
-        mPagerAdapter = new PagerAdapter(getSupportFragmentManager(),mFragments);
+        mPagerAdapter = new PagerAdapter(getSupportFragmentManager(), mFragments);
         mViewPager.setAdapter(mPagerAdapter);
         //the x and y position of mSplashContainer cant be obtained until the viewTree is fully loaded
         //so set the listener that will call when it does.
@@ -89,12 +127,13 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
         super.onSaveInstanceState(outState);
         outState.putBoolean("isRotated", true);
     }
+
     //check screen orientation
     public boolean isLandscape() {
         return this.getResources().getBoolean(R.bool.is_landscape);
     }
 
-    public void init(){
+    public void init() {
         mRoot = (RelativeLayout) findViewById(R.id.root_main);
         mSplashContainer = (LinearLayout) findViewById(R.id.splashContainer);
         mSplashProgress = (ProgressBar) findViewById(R.id.splash_progress);
@@ -110,6 +149,7 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
         mProfileStepImage2 = (ImageView) findViewById(R.id.profile_step_img_2);
         mProfileStepImage3 = (ImageView) findViewById(R.id.profile_step_img_3);
     }
+
     public void animateSplash(int delay, final int duration) {
         //animate the splash to top if screen is in portrait and not yet rotated
         if (!isLandscape() && !isRotated) {
@@ -160,9 +200,20 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
     @Override
     public void onClick(int i) {
         mViewPager.setCurrentItem(i);
+
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        AppEventsLogger.deactivateApp(this);
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        AppEventsLogger.activateApp(this);
+    }
 
     @Override
     protected void onPause() {
@@ -172,7 +223,7 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
 
     @Override
     public void onChange(int position) {
-        switch(position){
+        switch (position) {
             case 0:
                 mRingsContainer.setVisibility(View.GONE);
                 break;
@@ -191,10 +242,9 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
             case 2:
                 mSplashContainer.setVisibility(View.VISIBLE);
                 mRingsContainer.setVisibility(View.VISIBLE);//to avoid being invisible on rotation
-                if(!isLandscape()) {
+                if (!isLandscape()) {
                     mRingsContainer.setPadding(0, splashH, 0, 0);
-                }
-                else{
+                } else {
                     mRingsContainer.setPadding(0, 0, 0, 0);
                 }
                 mProfileStep1.setAlpha(1);
@@ -209,7 +259,7 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
 
                 break;
             case 3:
-                mRingsContainer.setPadding(0,0,0,0);
+                mRingsContainer.setPadding(0, 0, 0, 0);
                 mRingsContainer.setVisibility(View.VISIBLE);//to avoid being invisible on rotation
                 mSplashContainer.setVisibility(View.INVISIBLE);
                 mProfileStep1.setAlpha(1);
@@ -227,7 +277,21 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
     }
 
     @Override
-    public void onNextButtonClick(ViewPager viewPager, Button nextBtn) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        SignUpFragmentMain f = (SignUpFragmentMain) mFragments[1];
+        if (requestCode >= 0 && requestCode == Crop.REQUEST_PICK) {
+            f.getScreen4().onActivityResult(requestCode, resultCode, data);
+        } else if (requestCode >= 0 && requestCode == Crop.REQUEST_CROP) {
+            f.getScreen4().onActivityResult(requestCode, resultCode, data);
+        } else if (requestCode == SignUpFragmentScreen1.REQUEST_GOOGLE_LOGIN) {
+            /* This was a request by the Google API */
+            mFragments[0].onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    @Override
+    public void onNextButtonClick() {
 
     }
 }

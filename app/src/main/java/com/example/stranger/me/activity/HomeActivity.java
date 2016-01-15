@@ -1,5 +1,6 @@
-package com.example.stranger.me;
+package com.example.stranger.me.activity;
 
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.os.AsyncTask;
@@ -19,6 +20,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.example.stranger.me.R;
 import com.example.stranger.me.adapter.NavDrawerListAdapter;
 import com.example.stranger.me.fragment.ChatFragment;
 import com.example.stranger.me.fragment.FindContactFragment;
@@ -27,7 +29,14 @@ import com.example.stranger.me.fragment.HomeFragment;
 import com.example.stranger.me.fragment.MusicFragment;
 import com.example.stranger.me.fragment.ProfileFragment;
 import com.example.stranger.me.fragment.SettingsFragment;
+import com.example.stranger.me.helper.FirebaseHelper;
+import com.example.stranger.me.modal.Friend;
+import com.example.stranger.me.modal.FriendRequest;
 import com.example.stranger.me.modal.NavDrawerListItem;
+import com.firebase.client.ChildEventListener;
+import com.firebase.client.DataSnapshot;
+import com.firebase.client.FirebaseError;
+import com.firebase.client.ValueEventListener;
 
 import java.util.ArrayList;
 
@@ -76,7 +85,90 @@ public class HomeActivity extends AppCompatActivity{
             mToolbarTitle = savedInstanceState.getString("toolbarTitle");
             mIndex = savedInstanceState.getInt("currentFragmentIndex");
         }
+        ArrayList<Friend> friends = new ArrayList<Friend>();
+        FirebaseHelper.setFriends(friends);
 
+        ArrayList<FriendRequest> friendRequests = new ArrayList<FriendRequest>();
+        FirebaseHelper.setFriendRequests(friendRequests);
+        FirebaseHelper.getRoot().child("users").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                FirebaseHelper.setUsers(dataSnapshot);
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+        FirebaseHelper.getRoot().child("friends").child(FirebaseHelper.getAuthId()).addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                Friend friend = new Friend();
+                friend.setKey(dataSnapshot.getKey());
+                friend.setId((String) dataSnapshot.getValue());
+                FirebaseHelper.addFriend(friend);
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+                FirebaseHelper.removeFriend(dataSnapshot.getKey());
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+        FirebaseHelper.getRoot().child(FirebaseHelper.FRIEND_REQUESTS_KEY).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                FirebaseHelper.setFriendRequests(dataSnapshot);
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+        FirebaseHelper.getRoot().child(FirebaseHelper.FRIEND_REQUESTS_KEY).child(FirebaseHelper.getAuthId()).addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                FriendRequest request = dataSnapshot.getValue(FriendRequest.class);
+                request.setId(dataSnapshot.getKey());
+                FirebaseHelper.addFriendRequest(request);
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+                FirebaseHelper.removeFriendRequest(dataSnapshot.getKey());
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
 
         DrawerListPopulateTask task = new DrawerListPopulateTask();
         task.execute();
@@ -170,13 +262,15 @@ public class HomeActivity extends AppCompatActivity{
             case R.id.menu_settings:
                 getSupportActionBar().setTitle("Settings");
                 mIndex = mFragments.length - 1;
-                FragmentTransaction ft = mFragmentManager.beginTransaction();
-                ft.replace(R.id.content_frame, mFragments[mIndex], mFragmentTags[mIndex]);
-                ft.addToBackStack(null);
-                ft.commit();
+                setFragment(mIndex);
                 return true;
             case R.id.menu_logout:
 
+                FirebaseHelper.getRoot().unauth();
+                FirebaseHelper.setAuthId(null);
+                Intent intent = new Intent(this,MainActivity.class);
+                startActivity(intent);
+                finish();
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -189,6 +283,11 @@ public class HomeActivity extends AppCompatActivity{
         return true;
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        mFragments[mIndex].onActivityResult(requestCode,resultCode,data);
+    }
 
     public class DrawerListPopulateTask extends AsyncTask<Void, Void, ArrayList> {
         TypedArray navlistitems;
