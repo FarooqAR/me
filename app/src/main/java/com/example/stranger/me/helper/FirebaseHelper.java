@@ -146,36 +146,15 @@ public class FirebaseHelper {
         return isRequestSent;
     }
 
-    public static String getFriendKey(String id) {
-        String key = null;
-        try {
-            key = new GetFriendKeyTask().execute(id).get();
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
-
-        return key;
-    }
-    public static String getAuthUserKeyFromFriend(String id) {
-        String key = null;
-        try {
-            key = new GetFriendKeyTask().execute(id).get();
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
-
-        return key;
-    }
-
 
     public static void unFriend(final String id, final Firebase.CompletionListener listener) {
         //remove given user from friends of current user
 
-        getRoot().child("friends").child(getAuthId()).child(getFriendKey(id)).removeValue(new Firebase.CompletionListener() {
+        getRoot().child("friends").child(getAuthId()).child(id).removeValue(new Firebase.CompletionListener() {
             @Override
             public void onComplete(FirebaseError firebaseError, Firebase firebase) {
                 //remove auth user from friends of given user
-                getRoot().child("friends").child(id).equalTo(getAuthId()).getRef().removeValue(listener);
+                getRoot().child("friends").child(id).child(getAuthId()).removeValue(listener);
             }
         });
     }
@@ -188,7 +167,7 @@ public class FirebaseHelper {
     public static void confirmAsFriend(final String id, final Firebase.CompletionListener listener) {
         //first remove the given user request from current user's friend requests list
         FirebaseHelper.getRoot().child(FirebaseHelper.FRIEND_REQUESTS_KEY)
-                .child(FirebaseHelper.getAuthId()).child(id).removeValue(new Firebase.CompletionListener() {
+                .child(getAuthId()).child(id).removeValue(new Firebase.CompletionListener() {
             @Override
             public void onComplete(FirebaseError firebaseError, Firebase firebase) {
                 if (firebaseError == null)
@@ -197,12 +176,12 @@ public class FirebaseHelper {
                         @Override
                         public void onComplete(FirebaseError firebaseError, Firebase firebase) {
                             //then add the authenticated user as a friend of given user
-                            FirebaseHelper.getRoot().child("friends").child(FirebaseHelper.getAuthId()).push().setValue(id, new Firebase.CompletionListener() {
+                            FirebaseHelper.getRoot().child("friends").child(FirebaseHelper.getAuthId()).child(id).child("seen").setValue(false, new Firebase.CompletionListener() {
                                 @Override
                                 public void onComplete(FirebaseError firebaseError, Firebase firebase) {
                                     if (firebaseError == null) {
                                         //add then add the given user as a friend of authenticated user
-                                        FirebaseHelper.getRoot().child("friends").child(id).push().setValue(FirebaseHelper.getAuthId(), listener);
+                                        FirebaseHelper.getRoot().child("friends").child(id).child(getAuthId()).child("seen").setValue(false,FirebaseHelper.getAuthId(), listener);
                                     }
                                 }
                             });
@@ -302,32 +281,5 @@ public class FirebaseHelper {
         }
     }
 
-    private static class GetFriendKeyTask extends AsyncTask<String, Void, String> {
-        @Override
-        protected String doInBackground(String... params) {
-            String id = params[0];
 
-            for (int i= 0; i< friends.size();i++) {
-                if (friends.get(i).getId().equals(id)) {
-                    return friends.get(i).getKey();
-                }
-            }
-            return null;
-        }
-    }
-    private static class GetAuthUserKeyFromFriendTask extends AsyncTask<String, Void, String> {
-        @Override
-        protected String doInBackground(String... params) {
-            String id = params[0];
-
-            //friends of given user
-            Map<String,Object> userFriends = (Map<String, Object>) getFRIENDS().child(id);
-            for (Map.Entry<String,Object> entry : userFriends.entrySet()){
-                if(entry.getValue().equals(getAuthId())){//if user's friends list contains authId
-                    return entry.getKey();
-                }
-            }
-            return null;
-        }
-    }
 }
