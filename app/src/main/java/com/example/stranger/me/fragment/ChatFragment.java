@@ -69,7 +69,7 @@ public class ChatFragment extends Fragment {
     private ChildEventListener mFriendsListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-            new AddFriendToChatListTask().execute((String)dataSnapshot.getValue());
+            new AddFriendToChatListTask().execute(dataSnapshot.getKey());//key is the id of friend
 
         }
 
@@ -80,7 +80,7 @@ public class ChatFragment extends Fragment {
 
         @Override
         public void onChildRemoved(DataSnapshot dataSnapshot) {
-            new RemoveFriendFromList().execute((String)dataSnapshot.getValue());
+            new RemoveFriendFromList().execute(dataSnapshot.getKey());//key is the id of friend
         }
 
         @Override

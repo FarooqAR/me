@@ -106,9 +106,8 @@ public class HomeActivity extends AppCompatActivity{
         FirebaseHelper.getRoot().child("friends").child(FirebaseHelper.getAuthId()).addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                Friend friend = new Friend();
-                friend.setKey(dataSnapshot.getKey());
-                friend.setId((String) dataSnapshot.getValue());
+                Friend friend = dataSnapshot.getValue(Friend.class);
+                friend.setId(dataSnapshot.getKey());
                 FirebaseHelper.addFriend(friend);
             }
 
@@ -119,7 +118,7 @@ public class HomeActivity extends AppCompatActivity{
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
-                FirebaseHelper.removeFriend((String) dataSnapshot.getValue());
+                FirebaseHelper.removeFriend(dataSnapshot.getKey());
             }
 
             @Override

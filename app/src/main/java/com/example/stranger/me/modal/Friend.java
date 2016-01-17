@@ -5,12 +5,7 @@ package com.example.stranger.me.modal;
  */
 public class Friend {
     private String id;
-    private String key;
-
-    public Friend(String id, String key) {
-        this.id = id;
-        this.key = key;
-    }
+    private boolean seen;
 
     public Friend() {
     }
@@ -23,11 +18,11 @@ public class Friend {
         this.id = id;
     }
 
-    public String getKey() {
-        return key;
+    public boolean isSeen() {
+        return seen;
     }
 
-    public void setKey(String key) {
-        this.key = key;
+    public void setSeen(boolean seen) {
+        this.seen = seen;
     }
 }
