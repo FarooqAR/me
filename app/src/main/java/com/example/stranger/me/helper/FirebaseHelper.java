@@ -23,10 +23,19 @@ public class FirebaseHelper {
     public static ArrayList<FriendRequest> friendRequests = null;//requests to authenticated user
     public static ArrayList<Friend> friends = null;//friends of authenticated user
     private static DataSnapshot FRIEND_REQUESTS = null;//friend requests node
+    private static DataSnapshot FRIENDS = null;//friend node
 
 
     public static void setFriendRequests(DataSnapshot friendRequests) {
         FRIEND_REQUESTS = friendRequests;
+    }
+
+    public static DataSnapshot getFRIENDS() {
+        return FRIENDS;
+    }
+
+    public static void setFRIENDS(DataSnapshot FRIENDS) {
+        FirebaseHelper.FRIENDS = FRIENDS;
     }
 
     public static ArrayList<Friend> getFriends() {
@@ -147,6 +156,17 @@ public class FirebaseHelper {
 
         return key;
     }
+    public static String getAuthUserKeyFromFriend(String id) {
+        String key = null;
+        try {
+            key = new GetFriendKeyTask().execute(id).get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+
+        return key;
+    }
+
 
     public static void unFriend(final String id, final Firebase.CompletionListener listener) {
         //remove given user from friends of current user
@@ -154,8 +174,8 @@ public class FirebaseHelper {
         getRoot().child("friends").child(getAuthId()).child(getFriendKey(id)).removeValue(new Firebase.CompletionListener() {
             @Override
             public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                //first remove current user from friends of given user
-                getRoot().child("friends").child(getFriendKey(id)).child(getAuthId()).removeValue(listener);
+                //remove auth user from friends of given user
+                getRoot().child("friends").child(id).equalTo(getAuthId()).getRef().removeValue(listener);
             }
         });
     }
@@ -172,16 +192,23 @@ public class FirebaseHelper {
             @Override
             public void onComplete(FirebaseError firebaseError, Firebase firebase) {
                 if (firebaseError == null)
-                    //then add the authenticated user as a friend of given user
-                    FirebaseHelper.getRoot().child("friends").child(FirebaseHelper.getAuthId()).push().setValue(id, new Firebase.CompletionListener() {
+
+                    FirebaseHelper.getRoot().child(FirebaseHelper.FRIEND_REQUESTS_KEY).child(id).child(getAuthId()).removeValue(new Firebase.CompletionListener() {
                         @Override
                         public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                            if (firebaseError == null) {
-                                //add then add the given user as a friend of authenticated user
-                                FirebaseHelper.getRoot().child("friends").child(id).push().setValue(FirebaseHelper.getAuthId(), listener);
-                            }
+                            //then add the authenticated user as a friend of given user
+                            FirebaseHelper.getRoot().child("friends").child(FirebaseHelper.getAuthId()).push().setValue(id, new Firebase.CompletionListener() {
+                                @Override
+                                public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                                    if (firebaseError == null) {
+                                        //add then add the given user as a friend of authenticated user
+                                        FirebaseHelper.getRoot().child("friends").child(id).push().setValue(FirebaseHelper.getAuthId(), listener);
+                                    }
+                                }
+                            });
                         }
                     });
+
             }
         });
     }
@@ -201,9 +228,9 @@ public class FirebaseHelper {
     private static class RemoveFriendRequestTask extends AsyncTask<String, Void, Void> {
         @Override
         protected Void doInBackground(String... params) {
-            for (FriendRequest request : friendRequests) {
-                if (request.getId().equals(params[0])) {
-                    friendRequests.remove(request);
+            for (int i = 0; i< friendRequests.size();i++) {
+                if (friendRequests.get(i).getId().equals(params[0])) {
+                    friendRequests.remove(friendRequests.get(i));
                 }
             }
             return null;
@@ -237,9 +264,9 @@ public class FirebaseHelper {
     private static class RemoveFriendTask extends AsyncTask<String, Void, Void> {
         @Override
         protected Void doInBackground(String... params) {
-            for (Friend friend : friends) {
-                if (friend.getId().equals(params[0])) {
-                    friends.remove(friend);
+            for (int i = 0; i< friends.size(); i++) {
+                if (friends.get(i).getId().equals(params[0])) {
+                    friends.remove(friends.get(i));
                 }
             }
             return null;
@@ -251,8 +278,8 @@ public class FirebaseHelper {
         @Override
         protected Boolean doInBackground(String... params) {
             String id = params[0];
-            for (Friend friend : friends) {
-                if (friend.getId().equals(id))
+            for (int i = 0; i< friends.size() ;i++) {
+                if (friends.get(i).getId().equals(id))
                     return true;
             }
             return false;
@@ -280,9 +307,24 @@ public class FirebaseHelper {
         protected String doInBackground(String... params) {
             String id = params[0];
 
-            for (Friend friend : friends) {
-                if (friend.getId().equals(id)) {
-                    return friend.getKey();
+            for (int i= 0; i< friends.size();i++) {
+                if (friends.get(i).getId().equals(id)) {
+                    return friends.get(i).getKey();
+                }
+            }
+            return null;
+        }
+    }
+    private static class GetAuthUserKeyFromFriendTask extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... params) {
+            String id = params[0];
+
+            //friends of given user
+            Map<String,Object> userFriends = (Map<String, Object>) getFRIENDS().child(id);
+            for (Map.Entry<String,Object> entry : userFriends.entrySet()){
+                if(entry.getValue().equals(getAuthId())){//if user's friends list contains authId
+                    return entry.getKey();
                 }
             }
             return null;

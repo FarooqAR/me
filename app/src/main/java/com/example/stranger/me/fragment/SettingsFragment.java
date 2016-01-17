@@ -422,7 +422,7 @@ public class SettingsFragment extends Fragment {
 
             @Override
             public void onError(FirebaseError firebaseError) {
-                enablePassBtn();
+                enableEmailBtn();
             }
         });
     }

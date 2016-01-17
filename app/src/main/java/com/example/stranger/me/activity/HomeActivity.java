@@ -72,6 +72,8 @@ public class HomeActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        //set online status to true
+        FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("online").setValue(true);
         init();
         mFragmentManager = getSupportFragmentManager();
         FragmentTransaction ft = mFragmentManager.beginTransaction();
@@ -117,7 +119,7 @@ public class HomeActivity extends AppCompatActivity{
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
-                FirebaseHelper.removeFriend(dataSnapshot.getKey());
+                FirebaseHelper.removeFriend((String) dataSnapshot.getValue());
             }
 
             @Override
@@ -134,6 +136,17 @@ public class HomeActivity extends AppCompatActivity{
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 FirebaseHelper.setFriendRequests(dataSnapshot);
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+        FirebaseHelper.getRoot().child("friends").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                FirebaseHelper.setFRIENDS(dataSnapshot);
             }
 
             @Override
@@ -219,8 +232,17 @@ public class HomeActivity extends AppCompatActivity{
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
+        //set online status to false
 
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if(FirebaseHelper.getAuthId() != null) {
+            FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("online").setValue(false);
+        }
     }
 
     @Override
@@ -265,7 +287,7 @@ public class HomeActivity extends AppCompatActivity{
                 setFragment(mIndex);
                 return true;
             case R.id.menu_logout:
-
+                FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("online").setValue(false);
                 FirebaseHelper.getRoot().unauth();
                 FirebaseHelper.setAuthId(null);
                 Intent intent = new Intent(this,MainActivity.class);

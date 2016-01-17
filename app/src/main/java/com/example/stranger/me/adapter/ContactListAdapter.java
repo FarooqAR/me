@@ -52,7 +52,7 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactListAdapter.
             holder.unFriend.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    holder.showUnfriendPopup(v, user.getId());
+                    holder.showUnfriendPopup(holder,v, user.getId());
                 }
             });
         } else if (FirebaseHelper.isRequested(user.getId())) {
@@ -83,38 +83,32 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactListAdapter.
             public void onComplete(FirebaseError firebaseError, Firebase firebase) {
                 holder.hideConfirmRequestProgress();
                 holder.enableUnFriend();
+                holder.unFriend.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        holder.showUnfriendPopup(holder,v,id);
+                    }
+                });
             }
         });
     }
 
     //add as friend. this will send request to user
-    public void sendFriendRequest(final ViewHolder holder, String id) {
+    public static void sendFriendRequest(final ViewHolder holder, String id) {
         holder.showAddFriendProgress();
 
         FirebaseHelper.sendFriendRequest(id, new Firebase.CompletionListener() {
             @Override
             public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                holder.hideAddFriendProgress();
                 if (firebaseError == null) {
-                    holder.hideAddFriendProgress();
                     holder.enableRequestSent();
                 }
             }
         });
     }
 
-    public void unFriend(final ViewHolder holder, String id) {
-        holder.showUnFriendProgress();
-        //first remove the user from friends list
-        FirebaseHelper.unFriend(id, new Firebase.CompletionListener() {
-            @Override
-            public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                if (firebase == null) {
-                    holder.hideUnFriendProgress();
-                    holder.enableAddAsFriend();
-                }
-            }
-        });
-    }
+
 
     @Override
     public int getItemCount() {
@@ -122,6 +116,7 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactListAdapter.
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
+        private static final String TAG = "ViewHolder";
         public RobotoTextView displayName;
         public RobotoTextView country;
         public CircleImageView profileImage;
@@ -206,18 +201,29 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactListAdapter.
             requestSent.setVisibility(View.GONE);
         }
 
-        public void showUnfriendPopup(View v, final String id) {
+        public void showUnfriendPopup(final ViewHolder holder,View v, final String id) {
             PopupMenu popupMenu = new PopupMenu(mContext, v);
             popupMenu.inflate(R.menu.action_unfriend);
             popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
                     if (item.getItemId() == R.id.action_unfriend) {
+                        holder.showUnFriendProgress();
+                        //first remove the user from friends list
                         FirebaseHelper.unFriend(id, new Firebase.CompletionListener() {
                             @Override
                             public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                                if (firebaseError == null)
-                                    enableAddAsFriend();
+                                holder.hideUnFriendProgress();
+                                if (firebaseError == null) {
+                                    holder.enableAddAsFriend();
+                                    holder.addAsFriend.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            //add listener again
+                                            sendFriendRequest(holder, id);
+                                        }
+                                    });
+                                }
                             }
                         });
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal" android:layout_width="match_parent"
+    android:orientation="horizontal" android:layout_width="wrap_content"
     android:layout_height="wrap_content">
     <ImageView
         android:layout_width="14dp"
@@ -14,11 +14,13 @@
         android:layout_marginLeft="7dp"
         android:id="@+id/chat_friend_icon"/>
     <com.example.stranger.me.widget.RobotoTextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/chat_friend_name"
         android:textStyle="normal"
+        android:textColor="#8a000000"
         android:visibility="visible"
+        android:layout_marginLeft="7dp"
         android:layout_centerVertical="true"
         android:layout_toRightOf="@+id/chat_friend_icon"
         android:text="Username"/>

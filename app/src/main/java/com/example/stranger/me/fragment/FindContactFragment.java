@@ -83,6 +83,8 @@ public class FindContactFragment extends Fragment {
                 }
             }
         });
+
+
         return view;
     }
 
@@ -93,6 +95,10 @@ public class FindContactFragment extends Fragment {
         mProgress = (ProgressBar) view.findViewById(R.id.find_contact_progress);
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
 
     @Override
     public void onAttach(Context context) {
@@ -137,8 +143,8 @@ public class FindContactFragment extends Fragment {
                         first_name.toLowerCase().contains(text2) || last_name.toLowerCase().contains(text2)) {
                     user = new User(first_name, last_name, country, profileImage);
                     user.setId(user_id);
-                    if(!user_id.equals(FirebaseHelper.getAuthId()))//add contacts other than authenticated one
-                    mUsers.add(user);
+                    if (!user_id.equals(FirebaseHelper.getAuthId()))//add contacts other than authenticated one
+                        mUsers.add(user);
                 }
             }
             return mUsers.size();
@@ -151,21 +157,5 @@ public class FindContactFragment extends Fragment {
             mProgress.setVisibility(View.GONE);
         }
     }
-
-    public class ContactClearTask extends AsyncTask<Void, Void, Void> {
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            mUsers.clear();
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            mAdapter.notifyDataSetChanged();
-        }
-    }
-
 
 }

@@ -112,7 +112,10 @@ public class LoginFragment extends Fragment implements GoogleApiClient.Connectio
                 mGoogleApiClient.connect();
             }
         } else if (requestCode == REQUEST_FB_LOGIN) {
-            String token = data.getStringExtra(FacebookActivity.TOKEN);
+            String token = null;
+            if(data!=null) {
+                token = data.getStringExtra(FacebookActivity.TOKEN);
+            }
             if (token != null) {
                 authWithFacebook(token);
             }
