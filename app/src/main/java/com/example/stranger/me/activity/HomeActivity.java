@@ -29,6 +29,7 @@ import com.example.stranger.me.fragment.HomeFragment;
 import com.example.stranger.me.fragment.MusicFragment;
 import com.example.stranger.me.fragment.ProfileFragment;
 import com.example.stranger.me.fragment.SettingsFragment;
+import com.example.stranger.me.helper.ChatHelper;
 import com.example.stranger.me.helper.FirebaseHelper;
 import com.example.stranger.me.modal.Friend;
 import com.example.stranger.me.modal.FriendRequest;
@@ -50,6 +51,22 @@ public class HomeActivity extends AppCompatActivity{
     private FragmentManager mFragmentManager;
     private TypedArray mNavListItems;
     private int mIndex;
+    private PrivateChatListener mPrivateChatRetrieveListener;
+    private boolean privateChatRetrieved;
+    private ValueEventListener mPrivateChatListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            ChatHelper.setPrivateChatNode(dataSnapshot);
+            if(!privateChatRetrieved)
+            mPrivateChatRetrieveListener.onPrivateChatDataRetrieved();
+            privateChatRetrieved = true;
+        }
+
+        @Override
+        public void onCancelled(FirebaseError firebaseError) {
+
+        }
+    };
     private Fragment[] mFragments = {HomeFragment.newInstance(), ProfileFragment.newInstance(), MusicFragment.newInstance(),
              GroupsFragment.newInstance(), ChatFragment.newInstance(), FindContactFragment.newInstance(),
             SettingsFragment.newInstance()};
@@ -75,6 +92,7 @@ public class HomeActivity extends AppCompatActivity{
         //set online status to true
         FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("online").setValue(true);
         init();
+        mPrivateChatRetrieveListener = (PrivateChatListener) mFragments[4];
         mFragmentManager = getSupportFragmentManager();
         FragmentTransaction ft = mFragmentManager.beginTransaction();
         if (savedInstanceState == null) {
@@ -92,7 +110,7 @@ public class HomeActivity extends AppCompatActivity{
 
         ArrayList<FriendRequest> friendRequests = new ArrayList<FriendRequest>();
         FirebaseHelper.setFriendRequests(friendRequests);
-        FirebaseHelper.getRoot().child("users").addValueEventListener(new ValueEventListener() {
+        FirebaseHelper.getRoot().child("users").startAt().orderByChild("online").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 FirebaseHelper.setUsers(dataSnapshot);
@@ -153,6 +171,7 @@ public class HomeActivity extends AppCompatActivity{
 
             }
         });
+        FirebaseHelper.getRoot().child("private_chat").addValueEventListener(mPrivateChatListener);
         FirebaseHelper.getRoot().child(FirebaseHelper.FRIEND_REQUESTS_KEY).child(FirebaseHelper.getAuthId()).addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -348,5 +367,8 @@ public class HomeActivity extends AppCompatActivity{
             });
 
         }
+    }
+    public interface PrivateChatListener{
+        void onPrivateChatDataRetrieved();
     }
 }
