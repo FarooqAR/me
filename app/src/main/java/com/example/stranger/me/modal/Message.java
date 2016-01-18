@@ -1,16 +1,35 @@
 package com.example.stranger.me.modal;
 
+import com.shaded.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * Created by Stranger on 11/9/2015.
  */
 public class Message {
-    String message;
-    String sender;
-    int timestamp;
-    String soundUrl;
-    String videoUrl;
-    String imageUrl;
-    boolean seen;
+    @JsonIgnore
+    private String push_key;
+    private String message;
+    private String sender;
+    private String timestamp;
+    private String imageUrl;
+    private boolean seen;
+
+    public Message() {
+    }
+
+    public Message(String message, String sender) {
+        this.message = message;
+        this.sender = sender;
+        this.seen = false;
+    }
+
+    public String getPush_key() {
+        return push_key;
+    }
+
+    public void setPush_key(String push_key) {
+        this.push_key = push_key;
+    }
 
     public String getMessage() {
         return message;
@@ -28,28 +47,12 @@ public class Message {
         this.sender = sender;
     }
 
-    public int getTimestamp() {
+    public String getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(int timestamp) {
+    public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
-    }
-
-    public String getSoundUrl() {
-        return soundUrl;
-    }
-
-    public void setSoundUrl(String soundUrl) {
-        this.soundUrl = soundUrl;
-    }
-
-    public String getVideoUrl() {
-        return videoUrl;
-    }
-
-    public void setVideoUrl(String videoUrl) {
-        this.videoUrl = videoUrl;
     }
 
     public String getImageUrl() {
@@ -67,7 +70,4 @@ public class Message {
     public void setSeen(boolean seen) {
         this.seen = seen;
     }
-    /*LatLng mapPosition*/
-    /*TODO:add getters and setters*/
-
 }
