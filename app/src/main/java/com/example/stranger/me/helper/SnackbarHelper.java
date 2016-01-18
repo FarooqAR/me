@@ -8,12 +8,9 @@ import android.view.View;
  */
 public class SnackbarHelper {
     private static Snackbar snackbar;
-    public static Snackbar create(View v,CharSequence text){
-        if(snackbar == null){
-            snackbar = Snackbar.make(v,text,Snackbar.LENGTH_SHORT);
-        }
 
-        snackbar.setText(text);
+    public static Snackbar create(View v, CharSequence text) {
+        snackbar = Snackbar.make(v, text, Snackbar.LENGTH_SHORT);
         return snackbar;
     }
 }
