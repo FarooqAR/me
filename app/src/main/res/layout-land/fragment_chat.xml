@@ -1,37 +1,114 @@
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal">
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_weight="3">
+    android:id="@+id/root_view">
 
-        <ListView
-            android:id="@+id/friends_chat_list"
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:baselineAligned="false">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="3">
+
+            <ListView
+                android:id="@+id/friends_chat_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#f0f0f0"
+                android:choiceMode="singleChoice"
+                android:divider="@android:color/darker_gray"
+                android:dividerHeight="0dp" />
+        </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/friends_chat_content"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#fff"
-            android:choiceMode="singleChoice"
-            android:divider="@android:color/darker_gray"
-            android:dividerHeight="0dp" />
+            android:layout_weight="1">
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/friends_chat_recyclerview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_above="@+id/chat_msg_box"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:id="@+id/chat_msg_box"
+                android:orientation="vertical">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:background="#8a000000" />
+
+                <com.example.stranger.me.widget.RobotoEditText
+                    android:id="@+id/chat_msg_edittext"
+                    android:layout_width="match_parent"
+                    android:layout_marginTop="5dp"
+                    android:maxLength="150"
+                    android:textColor="#8a000000"
+                    android:textColorHint="#8a000000"
+                    android:layout_height="wrap_content"
+                    android:hint="Send Message to " />
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.example.stranger.me.widget.RobotoTextView
+                        android:id="@+id/chat_msg_length"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="10dp"
+                        android:textColor="#8a000000"
+                        android:text="150" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentRight="true"
+                        android:orientation="horizontal">
+
+                        <ImageButton
+                            android:id="@+id/chat_msg_face_btn"
+                            style="@style/Base.Widget.AppCompat.Toolbar.Button.Navigation"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:padding="10dp"
+                            android:src="@drawable/insert_face_btn" />
+
+                        <ImageButton
+                            android:id="@+id/chat_msg_photo_btn"
+                            style="@style/Base.Widget.AppCompat.Toolbar.Button.Navigation"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:padding="10dp"
+                            android:src="@drawable/insert_photo_btn" />
+
+                        <ImageButton
+                            android:id="@+id/chat_msg_send_btn"
+                            style="@style/Base.Widget.AppCompat.Toolbar.Button.Navigation"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:padding="10dp"
+                            android:src="@drawable/ic_send_gray_24dp" />
+                    </LinearLayout>
+                </RelativeLayout>
+
+
+            </LinearLayout>
+        </RelativeLayout>
+
+
     </LinearLayout>
-    <RelativeLayout
-        android:id="@+id/friends_chat_content"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:background="@color/orange4">
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/friends_chat_recyclerview"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-    </RelativeLayout>
-
-
-
-</LinearLayout>
+</android.support.design.widget.CoordinatorLayout>
 
 
