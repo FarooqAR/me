@@ -19,6 +19,7 @@ import com.example.stranger.me.fragment.LoginFragment;
 import com.example.stranger.me.fragment.SignUpFragmentMain;
 import com.example.stranger.me.fragment.SignUpFragmentScreen1;
 import com.example.stranger.me.helper.FirebaseHelper;
+import com.example.stranger.me.helper.SharedPreferenceHelper;
 import com.example.stranger.me.widget.NonSwipeableViewPager;
 import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
@@ -96,7 +97,7 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
         setContentView(R.layout.activity_main);
         Firebase.setAndroidContext(this);
         FacebookSdk.sdkInitialize(this);
-
+        SharedPreferenceHelper.setContext(this);
         if (savedInstanceState != null) {
             isRotated = savedInstanceState.getBoolean("isRotated");
         }
