@@ -15,7 +15,6 @@
         android:layout_width="wrap_content"
         android:layout_toLeftOf="@+id/chat_msg_sender_image"
         android:layout_height="wrap_content"
-        app:cardCornerRadius="10dp"
         android:elevation="4dp"
 
         app:cardBackgroundColor="@color/colorPrimary">

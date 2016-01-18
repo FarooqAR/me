@@ -12,7 +12,8 @@
         android:layout_toRightOf="@+id/chat_msg_sender_image"
         android:id="@+id/chat_msg_cardview"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:elevation="4dp">
 
         <RelativeLayout
             android:id="@+id/msgContainer"
@@ -26,14 +27,19 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textStyle="normal"
-                android:textColor="#000"
+                android:textColor="#8a000000"
                 android:text="Message Message Message" />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/chat_image"/>
             <com.example.stranger.me.widget.RobotoTextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/chat_msg_date"
                 android:paddingTop="3dp"
                 android:textStyle="normal"
+                android:textColor="#8a000000"
                 android:text="Sunday 11:00 pm"
                 android:textSize="8sp"
                 android:layout_below="@+id/chat_msg_text"/>
