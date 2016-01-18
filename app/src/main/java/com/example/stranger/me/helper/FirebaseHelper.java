@@ -58,7 +58,10 @@ public class FirebaseHelper {
     public static void setFriendRequests(ArrayList<FriendRequest> friendRequests) {
         FirebaseHelper.friendRequests = friendRequests;
     }
-
+    public static String getProfileImage(String user_id){
+        String url = (String) getUsers().child(user_id).child("profileImageURL").getValue();
+        return url;
+    }
     //update friend request list
     public static void addFriendRequest(FriendRequest request) {
         new AddFriendRequestTask().execute(request);
