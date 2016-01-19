@@ -1,10 +1,13 @@
 package com.example.stranger.me.fragment;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -17,15 +20,20 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
+import com.cloudinary.utils.ObjectUtils;
 import com.example.stranger.me.R;
 import com.example.stranger.me.activity.HomeActivity.PrivateChatListener;
 import com.example.stranger.me.adapter.ChatAdapter;
 import com.example.stranger.me.adapter.ChatFriendListAdapter;
 import com.example.stranger.me.helper.ChatHelper;
+import com.example.stranger.me.helper.CloudinaryHelper;
 import com.example.stranger.me.helper.FirebaseHelper;
 import com.example.stranger.me.helper.SharedPreferenceHelper;
+import com.example.stranger.me.helper.SnackbarHelper;
 import com.example.stranger.me.modal.Message;
 import com.example.stranger.me.modal.User;
 import com.example.stranger.me.widget.RobotoEditText;
@@ -34,18 +42,24 @@ import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.soundcloud.android.crop.Crop;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 public class ChatFragment extends Fragment implements PrivateChatListener {
 
     private static final String TAG = "ChatFragment";
     private static final String CURRENT_USER = "chat_current_user";
+    private static final String DATA_RETRIEVED = "data_retrieved";
     private RecyclerView mRecyclerView;
     private ListView mFriendsListView;
     private RelativeLayout mMainContent;
     private CoordinatorLayout mRootView;
+
     private RobotoEditText mChatMsgEditText;
     private RobotoTextView mChatMsgLengthView;
     private ImageButton mChatMsgSendBtn;
@@ -57,6 +71,8 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
     private int mChatMsgMaxLength = 150;
     private ArrayList<User> mUsers;
     private ArrayList<Message> mMessages;
+    private RelativeLayout mChatProgress;
+    private ProgressBar mFriendsListProgress;
     private ChatAdapter mChatAdapter;
     private ChatFriendListAdapter mChatFriendListAdapter;
     private OnFragmentInteractionListener mListener;
@@ -92,6 +108,12 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
         }
     };
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(DATA_RETRIEVED, dataRetrieved);
+    }
+
     private AdapterView.OnItemClickListener mFriendsListItemClickListener = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -100,6 +122,7 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
                 mMessages.clear();
                 mChatAdapter.notifyDataSetChanged();
                 mCurrentUser = mUsers.get(position).getId();
+                mChatMsgEditText.setHint("Send Message to " + mUsers.get(position).getFirstName());
                 updateChatMessageListener();
             }
         }
@@ -161,20 +184,50 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
         public void onClick(View v) {
             if (ChatHelper.getPrivateChatNode() != null) {//if data has been retrieved
                 String msg = String.valueOf(mChatMsgEditText.getText());
-                disableViews();
-                Message message = new Message(msg, FirebaseHelper.getAuthId());
-                ChatHelper.sendMessage(mCurrentUser, message, new Firebase.CompletionListener() {
-                    @Override
-                    public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                        if (firebaseError != null) {
-                            Log.d(TAG, firebaseError.getMessage());
+                if (!msg.equals("")) {
+                    disableViews();
+                    Message message = new Message(msg, FirebaseHelper.getAuthId());
+                    mChatMsgEditText.setText("");
+                    ChatHelper.sendMessage(mCurrentUser, message, new Firebase.CompletionListener() {
+                        @Override
+                        public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                            if (firebaseError != null) {
+                                Log.d(TAG, firebaseError.getMessage());
+                            }
+                            enableViews();
                         }
-                        enableViews();
-                    }
-                });
+                    });
+                }
             }
         }
     };
+    private View.OnClickListener mChatImageBtnListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (ChatHelper.getPrivateChatNode() != null) {//if data has been retrieved
+                disableViews();
+                Crop.pickImage(getActivity());
+            }
+        }
+    };
+    private void beginCrop(Uri source) {
+        Uri destination = Uri.fromFile(new File(getActivity().getCacheDir(), "cropped"));
+        Crop.of(source, destination).asSquare().withMaxSize(720, 1280).start(getActivity());
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == Crop.REQUEST_PICK && resultCode == Activity.RESULT_OK) {
+            beginCrop(data.getData());
+
+        } else if (requestCode == Crop.REQUEST_CROP && resultCode == Activity.RESULT_OK) {
+            //the image has been cropped and ready to upload
+            SnackbarHelper.create(mRootView,"Uploading Image").setDuration(Snackbar.LENGTH_INDEFINITE).show();
+            new ImageUploadTask().execute();
+        }
+    }
+
     private ChildEventListener mFriendsListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -203,6 +256,7 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
         }
     };
     private boolean dataRetrieved;
+    private boolean mViewCreated;
 
     public ChatFragment() {
         // Required empty public constructor
@@ -218,38 +272,51 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        if(savedInstanceState!=null){
+            dataRetrieved = savedInstanceState.getBoolean(DATA_RETRIEVED,false);
+        }
         mUsers = new ArrayList<>();
         mMessages = new ArrayList<>();
         mChatFriendListAdapter = new ChatFriendListAdapter(getActivity(), R.layout.chat_friends_list_item, mUsers);
 
     }
+    public void showFaces(){
+        Snackbar snackbar = SnackbarHelper.create(mRootView,"Choose a face");
+        Snackbar.SnackbarLayout layout = (Snackbar.SnackbarLayout) snackbar.getView();
+        TextView textView = (TextView) layout.findViewById(android.support.design.R.id.snackbar_text);
+        textView.setVisibility(View.GONE);
 
+    }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_chat, container, false);
         init(view);
-
+        mViewCreated = true;
+        if(dataRetrieved){
+            hideChatProgress();
+            hideFriendsListProgress();
+        }
         mMessages.clear();
         mChatAdapter = new ChatAdapter(getActivity(), mMessages);
         mFriendsListView.setAdapter(mChatFriendListAdapter);
 
         if (mCurrentUser != null) {
+            Integer i=null;
             try {
 
-                Integer i = new GetIndexTask().execute(mCurrentUser).get();
+                i = new GetIndexTask().execute(mCurrentUser).get();
                 if (i != null)
                     mFriendsListView.setItemChecked(i, true);
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
-
+            mChatMsgEditText.setHint("Send Message to " + mUsers.get(i).getFirstName());
             updateChatMessageListener();
-
         } else {
             mFriendsListView.setItemChecked(0, true);
+
         }
         mChatMsgEditText.addTextChangedListener(mChatEditTextListener);
         mFriendsListView.setOnItemClickListener(mFriendsListItemClickListener);
@@ -258,6 +325,7 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
 
 
         mChatMsgSendBtn.setOnClickListener(mChatSendBtnListener);
+        mChatMsgImageBtn.setOnClickListener(mChatImageBtnListener);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mRecyclerView.setAdapter(mChatAdapter);
         return view;
@@ -306,6 +374,16 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
         mChatMsgSendBtn = (ImageButton) view.findViewById(R.id.chat_msg_send_btn);
         mChatMsgFaceBtn = (ImageButton) view.findViewById(R.id.chat_msg_face_btn);
         mChatMsgImageBtn = (ImageButton) view.findViewById(R.id.chat_msg_photo_btn);
+        mChatProgress = (RelativeLayout) view.findViewById(R.id.chat_progress);
+        mFriendsListProgress = (ProgressBar) view.findViewById(R.id.friends_list_progress);
+    }
+
+    private void hideChatProgress() {
+        mChatProgress.setVisibility(View.GONE);
+    }
+
+    private void hideFriendsListProgress() {
+        mFriendsListProgress.setVisibility(View.GONE);
     }
 
     @Override
@@ -327,6 +405,7 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
     @Override
     public void onPrivateChatDataRetrieved() {
         dataRetrieved = true;
+        if (mViewCreated) hideChatProgress();
     }
 
 
@@ -435,7 +514,9 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
                     mCurrentUser = mUsers.get(0).getId();
                     FirebaseHelper.getRoot().child("private_conversation").child(ChatHelper.getConversationKey(mCurrentUser))
                             .orderByChild("timestamp").limitToLast(30).addChildEventListener(mChatMessageListener);
+                    mChatMsgEditText.setHint("Send Message to " + mUsers.get(0).getFirstName());
                 }
+                hideFriendsListProgress();
                 mChatFriendListAdapter.notifyDataSetChanged();
             }
         }
@@ -454,7 +535,9 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
         @Override
         protected void onPostExecute(Integer integer) {
             super.onPostExecute(integer);
-            mChatAdapter.notifyItemInserted(integer);
+            //use notifyItemInserted for animations
+            //have to use nofifyDataSetChanged due to this bug https://code.google.com/p/android/issues/detail?id=77846
+            mChatAdapter.notifyDataSetChanged();
             mRecyclerView.scrollToPosition(integer);
         }
     }
@@ -469,6 +552,46 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
                 }
             }
             return null;
+        }
+    }
+    public class ImageUploadTask extends AsyncTask<Void, Void, String> {
+
+        @Override
+        protected String doInBackground(Void... params) {
+            String url = null;
+            try {
+                File file = new File(getActivity().getCacheDir(), "cropped");
+                Map uploadResult = CloudinaryHelper.getInstance().uploader().upload(file, ObjectUtils.emptyMap());
+                /*
+                uploadResult contains following keys
+                public_id,version,signature,height,width,format,resource_type,created_at,bytes,type,url,secure_url,etag
+                */
+                url = (String) uploadResult.get("secure_url");
+
+                url = CloudinaryHelper.getInstance().url().generate(String.valueOf(uploadResult.get("public_id")));
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return url;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            Message message = new Message();
+            message.setImageUrl(s);
+            message.setSender(FirebaseHelper.getAuthId());
+            ChatHelper.sendMessage(mCurrentUser, message, new Firebase.CompletionListener() {
+                @Override
+                public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                    if (firebaseError == null) {
+                        enableViews();
+                        SnackbarHelper.create(mRootView, "Image Uploaded").setDuration(Snackbar.LENGTH_SHORT).show();
+                    }
+                }
+            });
+
         }
     }
 }

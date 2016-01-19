@@ -46,8 +46,10 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
     public void onBindViewHolder(ViewHolder holder, int position) {
         Message message = mMessages.get(position);
         if (message.getMessage() != null) {
+            holder.hideChatImage();
             holder.mMessageText.setText(message.getMessage());
         } else if (message.getImageUrl() != null) {
+            holder.hideMessageView();
             Picasso.with(mContext).load(message.getImageUrl()).into(holder.mChatImage);
         }
 
@@ -96,6 +98,14 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
             mMessageText = (RobotoTextView) view.findViewById(R.id.chat_msg_text);
             mMessageDate = (RobotoTextView) view.findViewById(R.id.chat_msg_date);
             mChatImage = (ImageView) view.findViewById(R.id.chat_image);
+        }
+        public void hideMessageView(){
+            mMessageText.setVisibility(View.GONE);
+            mChatImage.setVisibility(View.VISIBLE);
+        }
+        public void hideChatImage(){
+            mMessageText.setVisibility(View.VISIBLE);
+            mChatImage.setVisibility(View.GONE);
         }
     }
 }

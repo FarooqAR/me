@@ -32,6 +32,10 @@
                 android:textStyle="normal"
                 android:textColor="#fff"
                 android:text="Message Message Message " />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/chat_image"/>
             <com.example.stranger.me.widget.RobotoTextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
