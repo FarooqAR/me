@@ -1,12 +1,14 @@
 package com.example.stranger.me.fragment;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -15,10 +17,11 @@ import com.example.stranger.me.adapter.PagerAdapter;
 
 
 public class GroupsFragment extends Fragment {
-    private static final String TAG = "MusicFragment";
+    private static final String TAG = "GroupsFragment";
+    private static final String CURRENT_INDEX = "viewpager_current_index";
     private ViewPager mViewPager;
-    private Fragment[] mFragments = {AllMusicFragment.newInstance(), FavoriteMusicFragment.newInstance(), PlaylistFragment.newInstance()};
-    private String[] mFragmentTitles = {"All Music", "Favorite", "Playlist"};
+    private Fragment[] mFragments = {GroupConversationFragment.newInstance(), HomeFragment.newInstance(), GroupMemberFragment.newInstance(),GroupRequestsFragment.newInstance(), GroupListFragment.newInstance()};
+    private String[] mFragmentTitles = {"Chat", "Posts", "Members","Requests", "Groups"};
     private PagerAdapter mAdapter;
     private int mCurrentIndex;
     private PagerTabStrip mPagerTabStrip;
@@ -39,6 +42,7 @@ public class GroupsFragment extends Fragment {
 
         }
     };
+
     public GroupsFragment() {
         // Required empty public constructor
     }
@@ -53,7 +57,10 @@ public class GroupsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+        if (savedInstanceState != null) {
+            mCurrentIndex = savedInstanceState.getInt(CURRENT_INDEX, 0);
+        }
+        mAdapter = new PagerAdapter(getChildFragmentManager(), mFragments, mFragmentTitles);
     }
 
     @Override
@@ -62,13 +69,42 @@ public class GroupsFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_groups, container, false);
         init(view);
+        GroupListFragment fragment = (GroupListFragment) mFragments[mFragments.length - 1];
+        fragment.setParentViewPager(mViewPager);
+        mViewPager.setCurrentItem(mCurrentIndex);
+        mViewPager.addOnPageChangeListener(mPageListener);
+        mViewPager.setAdapter(mAdapter);
+        mViewPager.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN &&
+                        v instanceof ViewGroup) {
+                    ((ViewGroup) v).requestDisallowInterceptTouchEvent(true);
+                }
+                return false;
+            }
+        });
+        mPagerTabStrip.setTabIndicatorColor(getResources().getColor(R.color.colorPrimary));
         return view;
     }
 
     private void init(View view) {
-
+        mViewPager = (ViewPager) view.findViewById(R.id.groups_viewpager);
+        mPagerTabStrip = (PagerTabStrip) view.findViewById(R.id.groups_viewpager_indicator);
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(CURRENT_INDEX, mCurrentIndex);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        mFragments[0].onActivityResult(requestCode,resultCode,data);
+        mFragments[1].onActivityResult(requestCode,resultCode,data);
+    }
 
     @Override
     public void onAttach(Context context) {
