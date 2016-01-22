@@ -25,6 +25,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.cloudinary.utils.ObjectUtils;
+import com.example.stranger.me.CustomLinearLayoutManager;
 import com.example.stranger.me.R;
 import com.example.stranger.me.activity.HomeActivity.PrivateChatListener;
 import com.example.stranger.me.adapter.ChatAdapter;
@@ -86,6 +87,7 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
 
         @Override
         public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            //if the user that has changed his data is friend than update his online status in chatlistadapter
             if (FirebaseHelper.isFriend(dataSnapshot.getKey()))
                 new ChangeUserInChatFriendListTask().execute(dataSnapshot);
 
@@ -93,6 +95,7 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
 
         @Override
         public void onChildRemoved(DataSnapshot dataSnapshot) {
+            //if the user that has changed his data is friend than update his online status in chatlistadapter
             if (FirebaseHelper.isFriend(dataSnapshot.getKey()))
                 new RemoveUserFromChatFriendListTask().execute(dataSnapshot);
         }
@@ -326,7 +329,7 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
 
         mChatMsgSendBtn.setOnClickListener(mChatSendBtnListener);
         mChatMsgImageBtn.setOnClickListener(mChatImageBtnListener);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL,false));
         mRecyclerView.setAdapter(mChatAdapter);
         return view;
     }
@@ -525,7 +528,7 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
 
     private class AddMessageToList extends AsyncTask<DataSnapshot, Void, Integer> {
         @Override
-        protected Integer doInBackground(DataSnapshot... params) {
+        protected synchronized Integer doInBackground(DataSnapshot... params) {
             Message message = params[0].getValue(Message.class);
             message.setPush_key(params[0].getKey());
             mMessages.add(message);
@@ -535,9 +538,8 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
         @Override
         protected void onPostExecute(Integer integer) {
             super.onPostExecute(integer);
-            //use notifyItemInserted for animations
-            //have to use nofifyDataSetChanged due to this bug https://code.google.com/p/android/issues/detail?id=77846
-            mChatAdapter.notifyDataSetChanged();
+            mChatAdapter.notifyItemInserted(integer);
+            //mChatAdapter.notifyDataSetChanged();
             mRecyclerView.scrollToPosition(integer);
         }
     }
