@@ -3,7 +3,7 @@ package com.example.stranger.me.helper;
 import android.os.AsyncTask;
 
 import com.example.stranger.me.modal.Friend;
-import com.example.stranger.me.modal.FriendRequest;
+import com.example.stranger.me.modal.Request;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
@@ -20,7 +20,7 @@ public class FirebaseHelper {
     private static Firebase ROOT = null;
     private static String AUTH_ID = null;
     private static DataSnapshot USERS = null;//all users
-    public static ArrayList<FriendRequest> friendRequests = null;//requests to authenticated user
+    public static ArrayList<Request> friendRequests = null;//requests to authenticated user
     public static ArrayList<Friend> friends = null;//friends of authenticated user
     private static DataSnapshot FRIEND_REQUESTS = null;//friend requests node
     private static DataSnapshot FRIENDS = null;//friend node
@@ -47,7 +47,7 @@ public class FirebaseHelper {
     }
 
 
-    public static ArrayList<FriendRequest> getFriendRequests() {
+    public static ArrayList<Request> getFriendRequests() {
         return friendRequests;
     }
 
@@ -55,7 +55,7 @@ public class FirebaseHelper {
         return FRIEND_REQUESTS;
     }
 
-    public static void setFriendRequests(ArrayList<FriendRequest> friendRequests) {
+    public static void setFriendRequests(ArrayList<Request> friendRequests) {
         FirebaseHelper.friendRequests = friendRequests;
     }
     public static String getProfileImage(String user_id){
@@ -63,7 +63,7 @@ public class FirebaseHelper {
         return url;
     }
     //update friend request list
-    public static void addFriendRequest(FriendRequest request) {
+    public static void addFriendRequest(Request request) {
         new AddFriendRequestTask().execute(request);
     }
 
@@ -197,10 +197,10 @@ public class FirebaseHelper {
 
 
     //it will be executed when the friend request of a user to authenticated user is added
-    private static class AddFriendRequestTask extends AsyncTask<FriendRequest, Void, Void> {
+    private static class AddFriendRequestTask extends AsyncTask<Request, Void, Void> {
 
         @Override
-        protected Void doInBackground(FriendRequest... params) {
+        protected Void doInBackground(Request... params) {
             friendRequests.add(params[0]);
             return null;
         }
@@ -225,7 +225,7 @@ public class FirebaseHelper {
         @Override
         protected Boolean doInBackground(String... params) {
             String id = params[0];
-            for (FriendRequest request : friendRequests) {
+            for (Request request : friendRequests) {
                 if (request.getId().equals(id))
                     return true;
             }
