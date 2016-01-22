@@ -6,12 +6,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 
 import com.example.stranger.me.R;
 import com.example.stranger.me.helper.FirebaseHelper;
 import com.example.stranger.me.modal.Message;
 import com.example.stranger.me.widget.CircleImageView;
 import com.example.stranger.me.widget.RobotoTextView;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
@@ -25,12 +27,14 @@ import java.util.TimeZone;
 public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
     private ArrayList<Message> mMessages;
     public Context mContext;
-
+    private RecyclerView mRecyclerView;
     public ChatAdapter(Context context, ArrayList<Message> messages) {
         mMessages = messages;
         mContext = context;
     }
-
+    public void setRecyclerView(RecyclerView recyclerView){
+        mRecyclerView = recyclerView;
+    }
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = null;
@@ -43,14 +47,26 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, final int position) {
         Message message = mMessages.get(position);
         if (message.getMessage() != null) {
             holder.hideChatImage();
             holder.mMessageText.setText(message.getMessage());
         } else if (message.getImageUrl() != null) {
             holder.hideMessageView();
-            Picasso.with(mContext).load(message.getImageUrl()).into(holder.mChatImage);
+            Picasso.with(mContext).load(message.getImageUrl()).into(holder.mChatImage, new Callback() {
+                @Override
+                public void onSuccess() {
+                    holder.mImageProgress.setVisibility(View.GONE);
+                    if(mRecyclerView != null) mRecyclerView.scrollToPosition(position);
+                }
+
+                @Override
+                public void onError() {
+
+                }
+            });
+
         }
 
         holder.mMessageDate.setText(getFormattedDate(message.getTimestamp()));
@@ -87,7 +103,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
         public RobotoTextView mMessageText;
         public RobotoTextView mMessageDate;
         public ImageView mChatImage;
-
+        public ProgressBar mImageProgress;
         public ViewHolder(View itemView) {
             super(itemView);
             init(itemView);
@@ -98,14 +114,17 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
             mMessageText = (RobotoTextView) view.findViewById(R.id.chat_msg_text);
             mMessageDate = (RobotoTextView) view.findViewById(R.id.chat_msg_date);
             mChatImage = (ImageView) view.findViewById(R.id.chat_image);
+            mImageProgress = (ProgressBar) view.findViewById(R.id.chat_image_progress);
         }
         public void hideMessageView(){
             mMessageText.setVisibility(View.GONE);
             mChatImage.setVisibility(View.VISIBLE);
+            mImageProgress.setVisibility(View.VISIBLE);
         }
         public void hideChatImage(){
             mMessageText.setVisibility(View.VISIBLE);
             mChatImage.setVisibility(View.GONE);
+            mImageProgress.setVisibility(View.GONE);
         }
     }
 }
