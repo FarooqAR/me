@@ -13,4 +13,6 @@
     <string name="default_place_text">Select Your Location</string>
     <string name="fb_app_id">909279109140305</string>
     <string name="unfriend">Unfriend</string>
+    <string name="delete_group">Delete Group</string>
+    <string name="leave_group">Leave Group</string>
 </resources>
