@@ -67,7 +67,6 @@ public class FindContactFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 String text = String.valueOf(mFindContact.getText());
-
                 mUsers = new ArrayList<User>();
                 mAdapter = new ContactListAdapter(getActivity(), mUsers);
                 mRecyclerView.setAdapter(mAdapter);
