@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="@dimen/activity_horizontal_margin"
+    android:orientation="vertical">
+
+    <com.example.stranger.me.widget.RobotoEditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textStyle="normal"
+        android:hint="Group Name"
+        android:maxLength="30"
+        android:id="@+id/dialog_group_name"/>
+    <com.example.stranger.me.widget.RobotoEditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textStyle="normal"
+        android:hint="Group Description"
+        android:id="@+id/dialog_group_description"/>
+</LinearLayout>
