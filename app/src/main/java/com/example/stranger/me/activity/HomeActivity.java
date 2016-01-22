@@ -31,8 +31,9 @@ import com.example.stranger.me.fragment.ProfileFragment;
 import com.example.stranger.me.fragment.SettingsFragment;
 import com.example.stranger.me.helper.ChatHelper;
 import com.example.stranger.me.helper.FirebaseHelper;
+import com.example.stranger.me.helper.GroupHelper;
 import com.example.stranger.me.modal.Friend;
-import com.example.stranger.me.modal.FriendRequest;
+import com.example.stranger.me.modal.Request;
 import com.example.stranger.me.modal.NavDrawerListItem;
 import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
@@ -108,12 +109,23 @@ public class HomeActivity extends AppCompatActivity{
         ArrayList<Friend> friends = new ArrayList<Friend>();
         FirebaseHelper.setFriends(friends);
 
-        ArrayList<FriendRequest> friendRequests = new ArrayList<FriendRequest>();
+        ArrayList<Request> friendRequests = new ArrayList<Request>();
         FirebaseHelper.setFriendRequests(friendRequests);
         FirebaseHelper.getRoot().child("users").startAt().orderByChild("online").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 FirebaseHelper.setUsers(dataSnapshot);
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+        FirebaseHelper.getRoot().child("groups").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                GroupHelper.setGROUPS(dataSnapshot);
             }
 
             @Override
@@ -175,7 +187,7 @@ public class HomeActivity extends AppCompatActivity{
         FirebaseHelper.getRoot().child(FirebaseHelper.FRIEND_REQUESTS_KEY).child(FirebaseHelper.getAuthId()).addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                FriendRequest request = dataSnapshot.getValue(FriendRequest.class);
+                Request request = dataSnapshot.getValue(Request.class);
                 request.setId(dataSnapshot.getKey());
                 FirebaseHelper.addFriendRequest(request);
             }
@@ -200,7 +212,28 @@ public class HomeActivity extends AppCompatActivity{
 
             }
         });
+        FirebaseHelper.getRoot().child("group_members").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                GroupHelper.setMEMBERS(dataSnapshot);
+            }
 
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+        FirebaseHelper.getRoot().child("group_requests").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                GroupHelper.setGroupRequests(dataSnapshot);
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
         DrawerListPopulateTask task = new DrawerListPopulateTask();
         task.execute();
         setupDrawer();
