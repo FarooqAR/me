@@ -70,6 +70,12 @@
         <activity android:name=".activity.AvatarActivity" />
         <activity android:name="com.soundcloud.android.crop.CropImageActivity" />
         <activity android:name=".activity.FacebookActivity"/>
+        <service android:name=".service.ChatService" />
+        <receiver android:name=".service.ChatService$NotifcationDismissReceiver">
+            <intent-filter>
+                <action android:name="com.example.stranger.service.ChatService.NotifcationDismissReceiver"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
