@@ -18,8 +18,10 @@ import com.example.stranger.me.adapter.PagerAdapter;
 import com.example.stranger.me.fragment.LoginFragment;
 import com.example.stranger.me.fragment.SignUpFragmentMain;
 import com.example.stranger.me.fragment.SignUpFragmentScreen1;
+import com.example.stranger.me.helper.ChatHelper;
 import com.example.stranger.me.helper.FirebaseHelper;
 import com.example.stranger.me.helper.SharedPreferenceHelper;
+import com.example.stranger.me.helper.SnackbarHelper;
 import com.example.stranger.me.widget.NonSwipeableViewPager;
 import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
@@ -63,10 +65,28 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
                 animateSplash(0, 500);
                 FirebaseHelper.getRoot().removeAuthStateListener(mAuthStateListener);
             } else {
-                animateSplash(10000, 500);
-                Intent i = new Intent(MainActivity.this, HomeActivity.class);
-                startActivity(i);
-                finish();
+                animateSplash(15000, 500);
+
+
+                final Intent i = new Intent(MainActivity.this, HomeActivity.class);
+                if (getIntent() != null && getIntent().getStringExtra(HomeActivity.FRIEND_ID) != null) {
+                    i.putExtra(HomeActivity.FRIEND_ID, getIntent().getStringExtra(HomeActivity.FRIEND_ID));
+                }
+                FirebaseHelper.getRoot().child("private_chat").addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        ChatHelper.setPrivateChatNode(dataSnapshot);
+                        startActivity(i);
+                        finish();
+                    }
+
+                    @Override
+                    public void onCancelled(FirebaseError firebaseError) {
+                        SnackbarHelper.create(mRoot,"There is a problem in connection").show();
+                    }
+                });
+
+
             }
 
         }
