@@ -2,7 +2,6 @@ package com.example.stranger.me.helper;
 
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
@@ -38,12 +37,11 @@ public class GroupHelper {
     private static String PREVIOUS_GROUP=null;
 
     public static String getCurrentGroup() {
-        Log.d("GroupHelper","current group="+CURRENT_GROUP);
+
         return CURRENT_GROUP;
     }
 
     public static void setCurrentGroup(String currentGroup) {
-        SharedPreferenceHelper.getEditor().putString(CHAT_GROUP_KEY, currentGroup);
         CURRENT_GROUP = currentGroup;
     }
 
