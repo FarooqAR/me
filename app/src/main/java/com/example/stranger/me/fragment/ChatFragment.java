@@ -22,21 +22,19 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import com.cloudinary.utils.ObjectUtils;
 import com.example.stranger.me.CustomLinearLayoutManager;
 import com.example.stranger.me.R;
-import com.example.stranger.me.activity.HomeActivity.PrivateChatListener;
 import com.example.stranger.me.adapter.ChatAdapter;
 import com.example.stranger.me.adapter.ChatFriendListAdapter;
 import com.example.stranger.me.helper.ChatHelper;
 import com.example.stranger.me.helper.CloudinaryHelper;
 import com.example.stranger.me.helper.FirebaseHelper;
-import com.example.stranger.me.helper.SharedPreferenceHelper;
 import com.example.stranger.me.helper.SnackbarHelper;
 import com.example.stranger.me.modal.Message;
 import com.example.stranger.me.modal.User;
+import com.example.stranger.me.service.ChatService;
 import com.example.stranger.me.widget.RobotoEditText;
 import com.example.stranger.me.widget.RobotoTextView;
 import com.firebase.client.ChildEventListener;
@@ -51,10 +49,10 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-public class ChatFragment extends Fragment implements PrivateChatListener {
+public class ChatFragment extends Fragment{
 
     private static final String TAG = "ChatFragment";
-    private static final String CURRENT_USER = "chat_current_user";
+    public static final String CURRENT_USER = "chat_current_user";
     private static final String DATA_RETRIEVED = "data_retrieved";
     private RecyclerView mRecyclerView;
     private ListView mFriendsListView;
@@ -77,7 +75,7 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
     private ChatAdapter mChatAdapter;
     private ChatFriendListAdapter mChatFriendListAdapter;
     private OnFragmentInteractionListener mListener;
-    private SharedPreferenceHelper helper = SharedPreferenceHelper.getInstance();
+    private boolean mSendClicked;
     private String mCurrentUser;
     private ChildEventListener mUsersDataChangeListener = new ChildEventListener() {
         @Override
@@ -114,18 +112,18 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putBoolean(DATA_RETRIEVED, dataRetrieved);
     }
 
     private AdapterView.OnItemClickListener mFriendsListItemClickListener = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-            if (!mCurrentUser.equals(mUsers.get(position).getId()) && dataRetrieved) {//if the user didn't click the same item
+            if (!mCurrentUser.equals(mUsers.get(position).getId())) {//if the user didn't click the same item
                 mMessages.clear();
                 mChatAdapter.notifyDataSetChanged();
                 mCurrentUser = mUsers.get(position).getId();
                 mChatMsgEditText.setHint("Send Message to " + mUsers.get(position).getFirstName());
+                mSendClicked = false;
                 updateChatMessageListener();
             }
         }
@@ -146,6 +144,7 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
                 mChatMsgSendBtn.setEnabled(true);
                 mChatMsgSendBtn.setImageDrawable(getResources().getDrawable(R.drawable.send_btn));
             }
+
             mChatMsgLengthLeft = mChatMsgMaxLength - mChatMsgLength;
             mChatMsgLengthLeft = (mChatMsgLengthLeft < 0) ? 0 : mChatMsgLengthLeft;
             mChatMsgLengthView.setText("" + mChatMsgLengthLeft);
@@ -188,6 +187,7 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
             if (ChatHelper.getPrivateChatNode() != null) {//if data has been retrieved
                 String msg = String.valueOf(mChatMsgEditText.getText());
                 if (!msg.equals("")) {
+                    mSendClicked = true;
                     disableViews();
                     Message message = new Message(msg, FirebaseHelper.getAuthId());
                     mChatMsgEditText.setText("");
@@ -208,6 +208,7 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
         @Override
         public void onClick(View v) {
             if (ChatHelper.getPrivateChatNode() != null) {//if data has been retrieved
+                mSendClicked = true;
                 disableViews();
                 Crop.pickImage(getActivity());
             }
@@ -258,8 +259,6 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
 
         }
     };
-    private boolean dataRetrieved;
-    private boolean mViewCreated;
 
     public ChatFragment() {
         // Required empty public constructor
@@ -271,24 +270,24 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
 
         return fragment;
     }
-
+    public static ChatFragment newInstance(String userId) {
+        ChatFragment fragment = new ChatFragment();
+        Bundle args = new Bundle();
+        args.putString(CURRENT_USER,userId);
+        fragment.setArguments(args);
+        return fragment;
+    }
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if(savedInstanceState!=null){
-            dataRetrieved = savedInstanceState.getBoolean(DATA_RETRIEVED,false);
-        }
         mUsers = new ArrayList<>();
         mMessages = new ArrayList<>();
         mChatFriendListAdapter = new ChatFriendListAdapter(getActivity(), R.layout.chat_friends_list_item, mUsers);
-
-    }
-    public void showFaces(){
-        Snackbar snackbar = SnackbarHelper.create(mRootView,"Choose a face");
-        Snackbar.SnackbarLayout layout = (Snackbar.SnackbarLayout) snackbar.getView();
-        TextView textView = (TextView) layout.findViewById(android.support.design.R.id.snackbar_text);
-        textView.setVisibility(View.GONE);
-
+        if(getArguments() != null){
+            mCurrentUser = getArguments().getString(CURRENT_USER);
+            if(ChatService.getInstance() != null)
+            ChatService.getInstance().removeNotificationsFor(ChatHelper.getConversationKey(mCurrentUser));
+        }
     }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -296,26 +295,31 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_chat, container, false);
         init(view);
-        mViewCreated = true;
-        if(dataRetrieved){
-            hideChatProgress();
-            hideFriendsListProgress();
-        }
+
         mMessages.clear();
         mChatAdapter = new ChatAdapter(getActivity(), mMessages);
         mFriendsListView.setAdapter(mChatFriendListAdapter);
-
+        mChatMsgEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean b) {
+                if(b){
+                    new ResetSeen().execute(ChatHelper.getConversationKey(mCurrentUser));
+                }
+            }
+        });
         if (mCurrentUser != null) {
             Integer i=null;
             try {
 
                 i = new GetIndexTask().execute(mCurrentUser).get();
-                if (i != null)
+                if (i != null) {
                     mFriendsListView.setItemChecked(i, true);
+                    mChatMsgEditText.setHint("Send Message to " + mUsers.get(i).getFirstName());
+                }
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
-            mChatMsgEditText.setHint("Send Message to " + mUsers.get(i).getFirstName());
+
             updateChatMessageListener();
         } else {
             mFriendsListView.setItemChecked(0, true);
@@ -335,10 +339,15 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
     }
 
     public void updateChatMessageListener() {
+
         if (mCurrentUser != null && ChatHelper.getConversationKey(mCurrentUser) != null) {
-            FirebaseHelper.getRoot().child("private_conversation").child(ChatHelper.getConversationKey(mCurrentUser))
+            mMessages.clear();
+            mChatAdapter.notifyDataSetChanged();
+            String conversationKey = ChatHelper.getConversationKey(mCurrentUser);
+            new ResetSeen().execute(conversationKey);
+            FirebaseHelper.getRoot().child("private_conversation").child(conversationKey)
                     .orderByChild("timestamp").limitToLast(30).removeEventListener(mChatMessageListener);
-            FirebaseHelper.getRoot().child("private_conversation").child(ChatHelper.getConversationKey(mCurrentUser))
+            FirebaseHelper.getRoot().child("private_conversation").child(conversationKey)
                     .orderByChild("timestamp").limitToLast(30).addChildEventListener(mChatMessageListener);
         }
     }
@@ -346,11 +355,15 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
     @Override
     public void onPause() {
         super.onPause();
+        if(mCurrentUser!=null && ChatHelper.getConversationKey(mCurrentUser)!=null)
+        FirebaseHelper.getRoot().child("private_conversation").child(ChatHelper.getConversationKey(mCurrentUser))
+                .orderByChild("timestamp").limitToLast(30).removeEventListener(mChatMessageListener);
     }
 
     @Override
     public void onStop() {
         super.onStop();
+
     }
 
     public void disableViews() {
@@ -405,11 +418,7 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
         mListener = null;
     }
 
-    @Override
-    public void onPrivateChatDataRetrieved() {
-        dataRetrieved = true;
-        if (mViewCreated) hideChatProgress();
-    }
+
 
 
     public interface OnFragmentInteractionListener {
@@ -519,6 +528,20 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
                             .orderByChild("timestamp").limitToLast(30).addChildEventListener(mChatMessageListener);
                     mChatMsgEditText.setHint("Send Message to " + mUsers.get(0).getFirstName());
                 }
+                else {
+                    Integer i=null;
+                    try {
+                        i = new GetIndexTask().execute(mCurrentUser).get();
+                        if (i != null) {
+                            mFriendsListView.setItemChecked(i, true);
+                            mChatMsgEditText.setHint("Send Message to " + mUsers.get(i).getFirstName());
+                        }
+                    } catch (InterruptedException | ExecutionException e) {
+                        e.printStackTrace();
+                    }
+
+                    updateChatMessageListener();
+                }
                 hideFriendsListProgress();
                 mChatFriendListAdapter.notifyDataSetChanged();
             }
@@ -538,9 +561,16 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
         @Override
         protected void onPostExecute(Integer integer) {
             super.onPostExecute(integer);
-            mChatAdapter.notifyItemInserted(integer);
-            //mChatAdapter.notifyDataSetChanged();
-            mRecyclerView.scrollToPosition(integer);
+            if(integer != null) {
+                if (mSendClicked)
+                    mChatAdapter.notifyItemInserted(integer);
+                else
+                    mChatAdapter.notifyDataSetChanged();
+                mSendClicked = false;
+                mRecyclerView.scrollToPosition(integer);
+                hideChatProgress();
+                hideFriendsListProgress();
+            }
         }
     }
 
@@ -595,5 +625,23 @@ public class ChatFragment extends Fragment implements PrivateChatListener {
             });
 
         }
+    }
+
+    private class ResetSeen extends AsyncTask<String,Void,Void>{
+        @Override
+        protected Void doInBackground(String... strings) {
+            for (int i =0; i< mMessages.size();i++){
+                if(!mMessages.get(i).getSender().equals(FirebaseHelper.getAuthId()))
+                FirebaseHelper.getRoot().child("private_conversation").child(strings[0])
+                        .child(mMessages.get(i).getPush_key()).child("seen").setValue(true);
+            }
+            Log.d(TAG, "calling removeNotificationsFor");
+            if(ChatService.getInstance()!=null) {//service may have not yet started
+
+                ChatService.getInstance().removeNotificationsFor(strings[0]);
+            }
+            return null;
+        }
+
     }
 }

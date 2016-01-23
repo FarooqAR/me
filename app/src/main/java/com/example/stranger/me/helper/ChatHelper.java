@@ -74,7 +74,7 @@ public class ChatHelper {
             String key = null;
             Map<String, Object> private_chat_auth = null;
             Map<String, Object> private_chat_user = null;
-            if (getPrivateChatNode() != null) {
+            if (getPrivateChatNode() != null && FirebaseHelper.getAuthId() != null) {
                 private_chat_auth = (Map<String, Object>) getPrivateChatNode().child(FirebaseHelper.getAuthId()).getValue();
                 private_chat_user = (Map<String, Object>) getPrivateChatNode().child(params[0]).getValue();
                 if (private_chat_auth != null && private_chat_user != null) {
