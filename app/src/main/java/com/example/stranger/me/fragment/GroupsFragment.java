@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 
 import com.example.stranger.me.R;
 import com.example.stranger.me.adapter.PagerAdapter;
+import com.example.stranger.me.helper.GroupHelper;
 
 
 public class GroupsFragment extends Fragment {
@@ -26,6 +27,11 @@ public class GroupsFragment extends Fragment {
     private int mCurrentIndex;
     private PagerTabStrip mPagerTabStrip;
     private OnFragmentInteractionListener mListener;
+
+    public Fragment[] getmFragments() {
+        return mFragments;
+    }
+
     private ViewPager.OnPageChangeListener mPageListener = new ViewPager.OnPageChangeListener() {
         @Override
         public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -59,6 +65,10 @@ public class GroupsFragment extends Fragment {
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
             mCurrentIndex = savedInstanceState.getInt(CURRENT_INDEX, 0);
+        }
+
+        if(GroupHelper.getCurrentGroup()==null){
+            mCurrentIndex = mFragments.length - 1;//get to GroupListFragment as there is no conversation to show
         }
         mAdapter = new PagerAdapter(getChildFragmentManager(), mFragments, mFragmentTitles);
     }
