@@ -275,8 +275,6 @@ public class GroupConversationFragment extends Fragment implements GroupListAdap
     @Override
     public void onGroupChange() {
         mChatProgress.setVisibility(View.VISIBLE);
-
-
         mSelectGroup.setVisibility(View.GONE);
         updateListeners(GroupHelper.getCurrentGroup());
     }
