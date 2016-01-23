@@ -66,7 +66,6 @@ public class GroupConversationFragment extends Fragment implements GroupListAdap
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
             new AddMessageToList().execute(dataSnapshot);
-            Log.d(TAG, "onChildAdded");
         }
 
         @Override
@@ -210,8 +209,9 @@ public class GroupConversationFragment extends Fragment implements GroupListAdap
         mChatAdapter.setRecyclerView(mRecyclerView);
         if (GroupHelper.getCurrentGroup() != null) {
             //update chat
+            String groupName = GroupHelper.getGroupTitle(GroupHelper.getCurrentGroup());
             HomeActivity activity = (HomeActivity) getActivity();
-            activity.getSupportActionBar().setTitle(GroupHelper.getGroupTitle(GroupHelper.getCurrentGroup()));
+            activity.getSupportActionBar().setTitle(groupName);
             mChatProgress.setVisibility(View.VISIBLE);
             mSelectGroup.setVisibility(View.GONE);
             updateListeners(GroupHelper.getCurrentGroup());
