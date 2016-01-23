@@ -1,5 +1,7 @@
 package com.example.stranger.me.activity;
 
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
@@ -33,17 +35,23 @@ import com.example.stranger.me.helper.ChatHelper;
 import com.example.stranger.me.helper.FirebaseHelper;
 import com.example.stranger.me.helper.GroupHelper;
 import com.example.stranger.me.modal.Friend;
-import com.example.stranger.me.modal.Request;
 import com.example.stranger.me.modal.NavDrawerListItem;
+import com.example.stranger.me.modal.Request;
+import com.example.stranger.me.service.ChatService;
+import com.example.stranger.me.widget.CircleImageView;
+import com.example.stranger.me.widget.RobotoTextView;
 import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
+import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
-public class HomeActivity extends AppCompatActivity{
+public class HomeActivity extends AppCompatActivity {
     private static final String TAG = "HomeActivity";
+    public static final String FRIEND_ID = "friend_id";
     private Toolbar mToolbar;
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
@@ -52,15 +60,12 @@ public class HomeActivity extends AppCompatActivity{
     private FragmentManager mFragmentManager;
     private TypedArray mNavListItems;
     private int mIndex;
-    private PrivateChatListener mPrivateChatRetrieveListener;
-    private boolean privateChatRetrieved;
+
+
     private ValueEventListener mPrivateChatListener = new ValueEventListener() {
         @Override
         public void onDataChange(DataSnapshot dataSnapshot) {
             ChatHelper.setPrivateChatNode(dataSnapshot);
-            if(!privateChatRetrieved)
-            mPrivateChatRetrieveListener.onPrivateChatDataRetrieved();
-            privateChatRetrieved = true;
         }
 
         @Override
@@ -69,32 +74,47 @@ public class HomeActivity extends AppCompatActivity{
         }
     };
     private Fragment[] mFragments = {HomeFragment.newInstance(), ProfileFragment.newInstance(), MusicFragment.newInstance(),
-             GroupsFragment.newInstance(), ChatFragment.newInstance(), FindContactFragment.newInstance(),
+            GroupsFragment.newInstance(), ChatFragment.newInstance(), FindContactFragment.newInstance(),
             SettingsFragment.newInstance()};
     private String[] mFragmentTags = {"Home", "Profile", "My Music", "Groups", "Chat", "Find Contacts", "Settings"};
+    private CircleImageView mProfileImage;
+    private RobotoTextView mNavHeaderName;
+    private RobotoTextView mNavHeaderAbout;
+
+    public boolean isVisible() {
+        return isVisible;
+    }
+
+    private boolean isVisible;
     private FragmentManager.OnBackStackChangedListener mBackStackListener = new FragmentManager.OnBackStackChangedListener() {
         @Override
         public void onBackStackChanged() {
             Fragment currentFragment = mFragmentManager.findFragmentById(R.id.content_frame);
             mToolbarTitle = currentFragment.getTag();
-            if(mToolbarTitle.equals("Profile")){
-                getSupportActionBar().hide();
-            }
-            else{
-                getSupportActionBar().show();
-            }
+            getSupportActionBar().show();
             getSupportActionBar().setTitle(mToolbarTitle);
         }
     };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        Firebase.setAndroidContext(this);
         //set online status to true
         FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("online").setValue(true);
         init();
-        mPrivateChatRetrieveListener = (PrivateChatListener) mFragments[4];
         mFragmentManager = getSupportFragmentManager();
+        if (!isMyServiceRunning(ChatService.class)) {
+            Intent intent = new Intent(this, ChatService.class);
+            startService(intent);
+        }
+        String currentUserFromNotification = null;
+        if (getIntent() != null) {
+            currentUserFromNotification = getIntent().getStringExtra(FRIEND_ID);
+        }
+
+
         FragmentTransaction ft = mFragmentManager.beginTransaction();
         if (savedInstanceState == null) {
             mToolbarTitle = "Home";
@@ -148,7 +168,8 @@ public class HomeActivity extends AppCompatActivity{
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
-                FirebaseHelper.removeFriend(dataSnapshot.getKey());
+                String id = dataSnapshot.getKey();
+                FirebaseHelper.removeFriend(id);
             }
 
             @Override
@@ -183,7 +204,8 @@ public class HomeActivity extends AppCompatActivity{
 
             }
         });
-        FirebaseHelper.getRoot().child("private_chat").addValueEventListener(mPrivateChatListener);
+        if (ChatHelper.getPrivateChatNode() == null)
+            FirebaseHelper.getRoot().child("private_chat").addValueEventListener(mPrivateChatListener);
         FirebaseHelper.getRoot().child(FirebaseHelper.FRIEND_REQUESTS_KEY).child(FirebaseHelper.getAuthId()).addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -238,13 +260,18 @@ public class HomeActivity extends AppCompatActivity{
         task.execute();
         setupDrawer();
         mFragmentManager.addOnBackStackChangedListener(mBackStackListener);
-
+        if (currentUserFromNotification != null) {
+            setChatFragment(currentUserFromNotification);
+        }
     }
 
     public void init() {
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerListView = (ListView) findViewById(R.id.nav_drawer_list);
+        mProfileImage = (CircleImageView) findViewById(R.id.nav_header_image);
+        mNavHeaderName = (RobotoTextView) findViewById(R.id.nav_drawer_header_name);
+        mNavHeaderAbout = (RobotoTextView) findViewById(R.id.nav_drawer_header_about);
     }
 
     public void setupDrawer() {
@@ -269,6 +296,43 @@ public class HomeActivity extends AppCompatActivity{
         mDrawerToggle.setDrawerIndicatorEnabled(true);
         mDrawerLayout.setDrawerListener(mDrawerToggle);
 
+
+        FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("firstName").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String value = String.valueOf(dataSnapshot.getValue());
+                mNavHeaderName.setText("" + value);
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+        FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("profileImageURL").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String value = String.valueOf(dataSnapshot.getValue());
+                Picasso.with(HomeActivity.this).load(value).into(mProfileImage);
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+        FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("about").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String value = String.valueOf(dataSnapshot.getValue());
+                mNavHeaderAbout.setText("" + value);
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
     }
 
     public void setFragment(int index) {
@@ -281,19 +345,39 @@ public class HomeActivity extends AppCompatActivity{
 
     }
 
+    public void setChatFragment(String userId) {
+        Fragment fragment = ChatFragment.newInstance(userId);
+        FragmentTransaction ft = mFragmentManager.beginTransaction();
+        mIndex = 4;
+        ft.replace(R.id.content_frame, fragment, mFragmentTags[mIndex]);
+        ft.addToBackStack(null);
+        ft.commit();
+
+    }
+
     @Override
     protected void onDestroy() {
-        //set online status to false
-
         super.onDestroy();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        if(FirebaseHelper.getAuthId() != null) {
+        if (FirebaseHelper.getAuthId() != null) {
             FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("online").setValue(false);
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        isVisible = true;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        isVisible = false;
     }
 
     @Override
@@ -341,7 +425,7 @@ public class HomeActivity extends AppCompatActivity{
                 FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("online").setValue(false);
                 FirebaseHelper.getRoot().unauth();
                 FirebaseHelper.setAuthId(null);
-                Intent intent = new Intent(this,MainActivity.class);
+                Intent intent = new Intent(this, MainActivity.class);
                 startActivity(intent);
                 finish();
                 return true;
@@ -359,7 +443,7 @@ public class HomeActivity extends AppCompatActivity{
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        mFragments[mIndex].onActivityResult(requestCode,resultCode,data);
+        mFragments[mIndex].onActivityResult(requestCode, resultCode, data);
     }
 
     public class DrawerListPopulateTask extends AsyncTask<Void, Void, ArrayList> {
@@ -401,7 +485,16 @@ public class HomeActivity extends AppCompatActivity{
 
         }
     }
-    public interface PrivateChatListener{
-        void onPrivateChatDataRetrieved();
+
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
+
+
 }
