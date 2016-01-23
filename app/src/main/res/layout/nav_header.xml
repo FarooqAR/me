@@ -12,6 +12,7 @@
         android:layout_height="56dp"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
+        android:id="@+id/nav_header_image"
         android:src="@drawable/default_profile_wall"/>
 
     <LinearLayout
@@ -30,7 +31,7 @@
             android:textColor="#fff" />
 
         <com.example.stranger.me.widget.RobotoTextView
-            android:id="@+id/nav_drawer_header_email"
+            android:id="@+id/nav_drawer_header_about"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="username@gmail.com"
