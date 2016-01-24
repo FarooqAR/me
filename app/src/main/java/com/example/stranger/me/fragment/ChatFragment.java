@@ -90,6 +90,14 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
     private OnFragmentInteractionListener mListener;
     private boolean mSendClicked;
     private String mCurrentUser;
+    private GoogleApiClient mGoogleApiClient;
+    private View.OnClickListener mChatMapBtnListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            disableViews();
+            displayPlacePicker();
+        }
+    };
     private ChildEventListener mUsersDataChangeListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -121,14 +129,6 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
 
         }
     };
-    private View.OnClickListener mChatMapBtnListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-            disableViews();
-            displayPlacePicker();
-        }
-    };
-    private GoogleApiClient mGoogleApiClient;
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
@@ -267,7 +267,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
                 });
             }
         }
-        else if(requestCode == PLACE_PICKER_REQUEST && resultCode == Activity.RESULT_CANCELED){
+        else if(resultCode == Activity.RESULT_CANCELED){
             enableViews();
         }
     }
@@ -457,7 +457,6 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
             mGoogleApiClient.disconnect();
         }
         super.onStop();
-
     }
     private void displayPlacePicker() {
         if( mGoogleApiClient == null || !mGoogleApiClient.isConnected() )
