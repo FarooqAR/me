@@ -114,11 +114,11 @@ public class HomeActivity extends AppCompatActivity {
             currentUserFromNotification = getIntent().getStringExtra(FRIEND_ID);
         }
 
-
+        mIndex = 3;
         FragmentTransaction ft = mFragmentManager.beginTransaction();
         if (savedInstanceState == null) {
-            mToolbarTitle = "Home";
-            mIndex = 0;
+            mToolbarTitle = mFragmentTags[mIndex];
+            mIndex = 3;
             ft.replace(R.id.content_frame,
                     mFragments[mIndex], mFragmentTags[mIndex])
                     .commit();
@@ -479,7 +479,7 @@ public class HomeActivity extends AppCompatActivity {
                     TextView item = (TextView) view.findViewById(R.id.nav_drawer_item_text);
                     mToolbarTitle = (String) item.getText();
                     mDrawerLayout.closeDrawers();
-                    setFragment(position);
+                    setFragment(position + 3);//temporarily disabling first three fragments so skip that
                 }
             });
 
