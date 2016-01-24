@@ -88,7 +88,6 @@ public class ChatHelper {
                 }
             }
 
-
             return key;
         }
     }
@@ -103,9 +102,12 @@ public class ChatHelper {
             Thread t = new Thread() {
                 @Override
                 public void run(){
-                    map.put("sender", msg.getSender());
+                    map.put("sender", FirebaseHelper.getAuthId());
                     map.put("message", msg.getMessage());
                     map.put("seen",false);
+                    map.put("locationLat",msg.getLocationLat());
+                    map.put("locationLong",msg.getLocationLong());
+                    map.put("location",msg.getLocation());
                     map.put("imageUrl", msg.getImageUrl());
                     map.put("timestamp", ServerValue.TIMESTAMP);
                     sendEmptyMessage(0);
@@ -126,7 +128,7 @@ public class ChatHelper {
 
 
 
-    private static class GenerateKey extends AsyncTask<Void, Void, String> {
+    public static class GenerateKey extends AsyncTask<Void, Void, String> {
         @Override
         protected String doInBackground(Void... params) {
             return UUID.randomUUID().toString();

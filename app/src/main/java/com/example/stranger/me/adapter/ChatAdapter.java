@@ -1,14 +1,17 @@
 package com.example.stranger.me.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 
 import com.example.stranger.me.R;
+import com.example.stranger.me.activity.MapsActivity;
 import com.example.stranger.me.helper.FirebaseHelper;
 import com.example.stranger.me.modal.Message;
 import com.example.stranger.me.widget.CircleImageView;
@@ -48,12 +51,12 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
-        Message message = mMessages.get(position);
+        final Message message = mMessages.get(position);
         if (message.getMessage() != null) {
-            holder.hideChatImage();
+            holder.showMessageView();
             holder.mMessageText.setText(message.getMessage());
         } else if (message.getImageUrl() != null) {
-            holder.hideMessageView();
+            holder.showMessageImage();
             Picasso.with(mContext).load(message.getImageUrl()).into(holder.mChatImage, new Callback() {
                 @Override
                 public void onSuccess() {
@@ -67,6 +70,19 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
                 }
             });
 
+        }
+        else if(message.getLocationLat()!=null ){
+            holder.showMessageMapBtn();
+            holder.mChatMapBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent(mContext, MapsActivity.class);
+                    intent.putExtra("location",message.getLocation());
+                    intent.putExtra("locationLat",message.getLocationLat());
+                    intent.putExtra("locationLong",message.getLocationLong());
+                    mContext.startActivity(intent);
+                }
+            });
         }
 
         holder.mMessageDate.setText(getFormattedDate(message.getTimestamp()));
@@ -103,6 +119,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
         public RobotoTextView mMessageText;
         public RobotoTextView mMessageDate;
         public ImageView mChatImage;
+        public ImageButton mChatMapBtn;
         public ProgressBar mImageProgress;
         public ViewHolder(View itemView) {
             super(itemView);
@@ -115,16 +132,25 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
             mMessageDate = (RobotoTextView) view.findViewById(R.id.chat_msg_date);
             mChatImage = (ImageView) view.findViewById(R.id.chat_image);
             mImageProgress = (ProgressBar) view.findViewById(R.id.chat_image_progress);
+            mChatMapBtn = (ImageButton) view.findViewById(R.id.chat_msg_item_map_btn);
         }
-        public void hideMessageView(){
+        public void showMessageImage(){
             mMessageText.setVisibility(View.GONE);
+            mChatMapBtn.setVisibility(View.GONE);
             mChatImage.setVisibility(View.VISIBLE);
             mImageProgress.setVisibility(View.VISIBLE);
         }
-        public void hideChatImage(){
+        public void showMessageView(){
             mMessageText.setVisibility(View.VISIBLE);
             mChatImage.setVisibility(View.GONE);
             mImageProgress.setVisibility(View.GONE);
+            mChatMapBtn.setVisibility(View.GONE);
+        }
+        public void showMessageMapBtn(){
+            mMessageText.setVisibility(View.GONE);
+            mChatImage.setVisibility(View.GONE);
+            mImageProgress.setVisibility(View.GONE);
+            mChatMapBtn.setVisibility(View.VISIBLE);
         }
     }
 }

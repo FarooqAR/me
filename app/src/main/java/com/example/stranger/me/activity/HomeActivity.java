@@ -101,6 +101,7 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
         Firebase.setAndroidContext(this);
+
         //set online status to true
         FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("online").setValue(true);
         init();

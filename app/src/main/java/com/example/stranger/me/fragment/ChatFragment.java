@@ -22,6 +22,7 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.cloudinary.utils.ObjectUtils;
 import com.example.stranger.me.CustomLinearLayoutManager;
@@ -41,6 +42,16 @@ import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.firebase.client.ValueEventListener;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.Places;
+import com.google.android.gms.location.places.ui.PlacePicker;
 import com.soundcloud.android.crop.Crop;
 
 import java.io.File;
@@ -49,11 +60,11 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-public class ChatFragment extends Fragment{
+public class ChatFragment extends Fragment implements OnConnectionFailedListener,ConnectionCallbacks{
 
     private static final String TAG = "ChatFragment";
     public static final String CURRENT_USER = "chat_current_user";
-    private static final String DATA_RETRIEVED = "data_retrieved";
+    private static final int PLACE_PICKER_REQUEST = 4361;
     private RecyclerView mRecyclerView;
     private ListView mFriendsListView;
     private RelativeLayout mMainContent;
@@ -61,9 +72,11 @@ public class ChatFragment extends Fragment{
 
     private RobotoEditText mChatMsgEditText;
     private RobotoTextView mChatMsgLengthView;
+    private TextView mNoMessage;
     private ImageButton mChatMsgSendBtn;
     private ImageButton mChatMsgImageBtn;
     private ImageButton mChatMsgFaceBtn;
+    private ImageButton mChatMsgMapBtn;
 
     private int mChatMsgLength;
     private int mChatMsgLengthLeft;
@@ -108,6 +121,14 @@ public class ChatFragment extends Fragment{
 
         }
     };
+    private View.OnClickListener mChatMapBtnListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            disableViews();
+            displayPlacePicker();
+        }
+    };
+    private GoogleApiClient mGoogleApiClient;
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
@@ -178,7 +199,7 @@ public class ChatFragment extends Fragment{
 
         @Override
         public void onCancelled(FirebaseError firebaseError) {
-
+            Log.d(TAG,"onCancelled");
         }
     };
     private View.OnClickListener mChatSendBtnListener = new View.OnClickListener() {
@@ -229,6 +250,25 @@ public class ChatFragment extends Fragment{
             //the image has been cropped and ready to upload
             SnackbarHelper.create(mRootView,"Uploading Image").setDuration(Snackbar.LENGTH_INDEFINITE).show();
             new ImageUploadTask().execute();
+        }
+        else if( requestCode == PLACE_PICKER_REQUEST && resultCode == Activity.RESULT_OK ) {
+            //sendMessage
+            Place place =  PlacePicker.getPlace(data, getActivity());
+            if(place.getName()!=null && place.getLatLng() != null){
+                Message msg = new Message();
+                msg.setLocationLat(place.getLatLng().latitude);
+                msg.setLocationLong(place.getLatLng().longitude);
+                msg.setLocation(String.valueOf(place.getName()));
+                ChatHelper.sendMessage(mCurrentUser, msg, new Firebase.CompletionListener() {
+                    @Override
+                    public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                        enableViews();
+                    }
+                });
+            }
+        }
+        else if(requestCode == PLACE_PICKER_REQUEST && resultCode == Activity.RESULT_CANCELED){
+            enableViews();
         }
     }
 
@@ -282,11 +322,19 @@ public class ChatFragment extends Fragment{
         super.onCreate(savedInstanceState);
         mUsers = new ArrayList<>();
         mMessages = new ArrayList<>();
+        mGoogleApiClient = new GoogleApiClient
+                .Builder(getActivity())
+                .enableAutoManage(getActivity(), 0, this )
+                .addApi( Places.GEO_DATA_API )
+                .addApi( Places.PLACE_DETECTION_API )
+                .addConnectionCallbacks( this )
+                .addOnConnectionFailedListener( this )
+                .build();
         mChatFriendListAdapter = new ChatFriendListAdapter(getActivity(), R.layout.chat_friends_list_item, mUsers);
         if(getArguments() != null){
             mCurrentUser = getArguments().getString(CURRENT_USER);
             if(ChatService.getInstance() != null)
-            ChatService.getInstance().removeNotificationsFor(ChatHelper.getConversationKey(mCurrentUser));
+                new ResetSeen().execute(ChatHelper.getConversationKey(mCurrentUser));
         }
     }
     @Override
@@ -302,7 +350,7 @@ public class ChatFragment extends Fragment{
         mChatMsgEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean b) {
-                if(b){
+                if (b) {
                     new ResetSeen().execute(ChatHelper.getConversationKey(mCurrentUser));
                 }
             }
@@ -333,8 +381,25 @@ public class ChatFragment extends Fragment{
 
         mChatMsgSendBtn.setOnClickListener(mChatSendBtnListener);
         mChatMsgImageBtn.setOnClickListener(mChatImageBtnListener);
-        mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL,false));
+        mChatMsgMapBtn.setOnClickListener(mChatMapBtnListener);
+        mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
         mRecyclerView.setAdapter(mChatAdapter);
+        FirebaseHelper.getRoot().child("private_conversation").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                hideChatProgress();
+                hideFriendsListProgress();
+                if(mCurrentUser != null && !dataSnapshot.child(ChatHelper.getConversationKey(mCurrentUser)).exists()){
+                    showNoMessage();
+                }
+                FirebaseHelper.getRoot().child("private_conversation").removeEventListener(this);
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
         return view;
     }
 
@@ -349,6 +414,22 @@ public class ChatFragment extends Fragment{
                     .orderByChild("timestamp").limitToLast(30).removeEventListener(mChatMessageListener);
             FirebaseHelper.getRoot().child("private_conversation").child(conversationKey)
                     .orderByChild("timestamp").limitToLast(30).addChildEventListener(mChatMessageListener);
+            FirebaseHelper.getRoot().child("private_conversation").addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    hideChatProgress();
+                    hideFriendsListProgress();
+                    if (!dataSnapshot.child(ChatHelper.getConversationKey(mCurrentUser)).exists()) {
+                        showNoMessage();
+                    }
+                    FirebaseHelper.getRoot().child("private_conversation").removeEventListener(this);
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+
+                }
+            });
         }
     }
 
@@ -361,9 +442,36 @@ public class ChatFragment extends Fragment{
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        if( mGoogleApiClient != null) {
+            if (!mGoogleApiClient.isConnected() || !mGoogleApiClient.isConnecting()) {
+                mGoogleApiClient.connect();
+            }
+        }
+    }
+
+    @Override
     public void onStop() {
+        if( mGoogleApiClient != null && mGoogleApiClient.isConnected() ) {
+            mGoogleApiClient.disconnect();
+        }
         super.onStop();
 
+    }
+    private void displayPlacePicker() {
+        if( mGoogleApiClient == null || !mGoogleApiClient.isConnected() )
+            return;
+
+        PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
+
+        try {
+            startActivityForResult( builder.build( getActivity()), PLACE_PICKER_REQUEST );
+        } catch ( GooglePlayServicesRepairableException e ) {
+            Log.d(TAG, "GooglePlayServicesRepairableException thrown" );
+        } catch ( GooglePlayServicesNotAvailableException e ) {
+            Log.d( TAG, "GooglePlayServicesNotAvailableException thrown" );
+        }
     }
 
     public void disableViews() {
@@ -371,6 +479,7 @@ public class ChatFragment extends Fragment{
         mChatMsgSendBtn.setEnabled(false);
         mChatMsgFaceBtn.setEnabled(false);
         mChatMsgImageBtn.setEnabled(false);
+        mChatMsgMapBtn.setEnabled(false);
     }
 
     public void enableViews() {
@@ -378,9 +487,11 @@ public class ChatFragment extends Fragment{
         mChatMsgSendBtn.setEnabled(true);
         mChatMsgFaceBtn.setEnabled(true);
         mChatMsgImageBtn.setEnabled(true);
+        mChatMsgMapBtn.setEnabled(true);
     }
 
     private void init(View view) {
+        mNoMessage = (TextView) view.findViewById(R.id.no_message);
         mRecyclerView = (RecyclerView) view.findViewById(R.id.friends_chat_recyclerview);
         mFriendsListView = (ListView) view.findViewById(R.id.friends_chat_list);
         mMainContent = (RelativeLayout) view.findViewById(R.id.friends_chat_content);
@@ -390,12 +501,21 @@ public class ChatFragment extends Fragment{
         mChatMsgSendBtn = (ImageButton) view.findViewById(R.id.chat_msg_send_btn);
         mChatMsgFaceBtn = (ImageButton) view.findViewById(R.id.chat_msg_face_btn);
         mChatMsgImageBtn = (ImageButton) view.findViewById(R.id.chat_msg_photo_btn);
+        mChatMsgMapBtn = (ImageButton) view.findViewById(R.id.chat_msg_map_btn);
         mChatProgress = (RelativeLayout) view.findViewById(R.id.chat_progress);
         mFriendsListProgress = (ProgressBar) view.findViewById(R.id.friends_list_progress);
     }
 
     private void hideChatProgress() {
         mChatProgress.setVisibility(View.GONE);
+        hideNoMessage();
+    }
+
+    private void hideNoMessage() {
+        mNoMessage.setVisibility(View.GONE);
+    }
+    private void showNoMessage() {
+        mNoMessage.setVisibility(View.VISIBLE);
     }
 
     private void hideFriendsListProgress() {
@@ -418,7 +538,20 @@ public class ChatFragment extends Fragment{
         mListener = null;
     }
 
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
 
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
 
 
     public interface OnFragmentInteractionListener {
@@ -524,6 +657,7 @@ public class ChatFragment extends Fragment{
             if (integer != null) {
                 if (mCurrentUser == null) {
                     mCurrentUser = mUsers.get(0).getId();
+                    if(ChatHelper.getConversationKey(mCurrentUser)!=null)
                     FirebaseHelper.getRoot().child("private_conversation").child(ChatHelper.getConversationKey(mCurrentUser))
                             .orderByChild("timestamp").limitToLast(30).addChildEventListener(mChatMessageListener);
                     mChatMsgEditText.setHint("Send Message to " + mUsers.get(0).getFirstName());

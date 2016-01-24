@@ -13,7 +13,33 @@ public class Message {
     private String timestamp;
     private String imageUrl;
     private boolean seen;
+    private Double locationLat;
+    private Double locationLong;
+    private String location;
 
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public Double getLocationLong() {
+        return locationLong;
+    }
+
+    public void setLocationLong(Double locationLong) {
+        this.locationLong = locationLong;
+    }
+
+    public Double getLocationLat() {
+        return locationLat;
+    }
+
+    public void setLocationLat(Double locationLat) {
+        this.locationLat = locationLat;
+    }
     public Message() {
     }
 

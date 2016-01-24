@@ -10,6 +10,7 @@ import com.firebase.client.FirebaseError;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -163,20 +164,21 @@ public class FirebaseHelper {
                 getRoot().child("friends").child(id).child(getAuthId()).removeValue(new Firebase.CompletionListener() {
                     @Override
                     public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                        //delete their conversation
-                        getRoot().child("private_conversation").child(ChatHelper.getConversationKey(id)).removeValue(new Firebase.CompletionListener() {
-                            @Override
-                            public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                                //delete registered conversation keys
-                                getRoot().child("private_chat").child(FirebaseHelper.getAuthId()).child(id).removeValue(new Firebase.CompletionListener() {
-                                    @Override
-                                    public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                                        //delete registered conversation keys
-                                        getRoot().child("private_chat").child(id).child(FirebaseHelper.getAuthId()).removeValue(listener);
-                                    }
-                                });
-                            }
-                        });
+                        //delete their conversation if there is a key (confirmAsFriend will ensure that there is a key)
+                            getRoot().child("private_conversation").child(ChatHelper.getConversationKey(id)).removeValue(new Firebase.CompletionListener() {
+                                @Override
+                                public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                                    //delete registered conversation keys
+                                    getRoot().child("private_chat").child(FirebaseHelper.getAuthId()).child(id).removeValue(new Firebase.CompletionListener() {
+                                        @Override
+                                        public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                                            //delete registered conversation keys
+                                            getRoot().child("private_chat").child(id).child(FirebaseHelper.getAuthId()).removeValue(listener);
+                                        }
+                                    });
+                                }
+                            });
+
                     }
                 });
             }
@@ -205,7 +207,13 @@ public class FirebaseHelper {
                                 public void onComplete(FirebaseError firebaseError, Firebase firebase) {
                                     if (firebaseError == null) {
                                         //add then add the given user as a friend of authenticated user
-                                        FirebaseHelper.getRoot().child("friends").child(id).child(getAuthId()).child("seen").setValue(false, FirebaseHelper.getAuthId(), listener);
+                                        FirebaseHelper.getRoot().child("friends").child(id).child(getAuthId()).child("seen").setValue(false, FirebaseHelper.getAuthId(), new Firebase.CompletionListener() {
+                                            @Override
+                                            public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                                                new RegisterKey(id,listener).execute();
+
+                                            }
+                                        });
                                     }
                                 }
                             });
@@ -215,7 +223,31 @@ public class FirebaseHelper {
             }
         });
     }
+    static class RegisterKey extends AsyncTask<Void,Void,String>{
+        Firebase.CompletionListener listener;
+        String id;
+        public RegisterKey(String id,Firebase.CompletionListener listener) {
+            this.listener = listener;
+            this.id = id;
+        }
 
+        @Override
+        protected String doInBackground(Void... voids) {
+            String key = String.valueOf(UUID.randomUUID());
+            return key;
+        }
+
+        @Override
+        protected void onPostExecute(final String s) {
+            super.onPostExecute(s);
+            FirebaseHelper.getRoot().child("private_chat").child(FirebaseHelper.getAuthId()).child(id).setValue(s, new Firebase.CompletionListener() {
+                @Override
+                public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                    FirebaseHelper.getRoot().child("private_chat").child(id).child(FirebaseHelper.getAuthId()).setValue(s, listener);
+                }
+            });
+        }
+    }
 
     //it will be executed when the friend request of a user to authenticated user is added
     private static class AddFriendRequestTask extends AsyncTask<Request, Void, Void> {

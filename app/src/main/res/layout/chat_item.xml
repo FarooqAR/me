@@ -33,6 +33,14 @@
                     android:textStyle="normal"
                     android:textColor="#8a000000"
                     android:text="Message Message Message" />
+                <ImageButton
+                    android:id="@+id/chat_msg_item_map_btn"
+                    style="@style/Base.Widget.AppCompat.Toolbar.Button.Navigation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:padding="10dp"
+                    android:src="@drawable/msg_map_btn" />
                 <ProgressBar
                     style="@android:style/Widget.ProgressBar.Small.Inverse"
                     android:layout_width="wrap_content"
