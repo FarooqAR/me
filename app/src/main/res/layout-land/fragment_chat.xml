@@ -81,7 +81,13 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentRight="true"
                         android:orientation="horizontal">
-
+                        <ImageButton
+                            android:id="@+id/chat_msg_map_btn"
+                            style="@style/Base.Widget.AppCompat.Toolbar.Button.Navigation"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:padding="10dp"
+                            android:src="@drawable/send_map_btn" />
                         <ImageButton
                             android:id="@+id/chat_msg_face_btn"
                             style="@style/Base.Widget.AppCompat.Toolbar.Button.Navigation"
