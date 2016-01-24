@@ -80,6 +80,12 @@ public class HomeActivity extends AppCompatActivity {
     private CircleImageView mProfileImage;
     private RobotoTextView mNavHeaderName;
     private RobotoTextView mNavHeaderAbout;
+    private View.OnClickListener mNavHeaderAboutListener=new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            setFragment(mFragments.length-1);
+        }
+    };
 
     public boolean isVisible() {
         return isVisible;
@@ -326,7 +332,14 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 String value = String.valueOf(dataSnapshot.getValue());
-                mNavHeaderAbout.setText("" + value);
+                if(mNavHeaderAbout!=null) {
+                    mNavHeaderAbout.setText("" + value);
+                    mNavHeaderAbout.setOnClickListener(null);
+                }
+                else{
+                    mNavHeaderAbout.setText("Set your description");
+                    mNavHeaderAbout.setOnClickListener(mNavHeaderAboutListener);
+                }
             }
 
             @Override
