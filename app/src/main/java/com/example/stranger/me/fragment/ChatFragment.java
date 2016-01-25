@@ -46,6 +46,7 @@ import com.firebase.client.ValueEventListener;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
@@ -60,7 +61,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-public class ChatFragment extends Fragment implements OnConnectionFailedListener,ConnectionCallbacks{
+public class ChatFragment extends Fragment implements OnConnectionFailedListener, ConnectionCallbacks {
 
     private static final String TAG = "ChatFragment";
     public static final String CURRENT_USER = "chat_current_user";
@@ -90,12 +91,16 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
     private OnFragmentInteractionListener mListener;
     private boolean mSendClicked;
     private String mCurrentUser;
+    private String mPreviousKey;//previous conversation for messages were showing
     private GoogleApiClient mGoogleApiClient;
     private View.OnClickListener mChatMapBtnListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            disableViews();
-            displayPlacePicker();
+            if (GooglePlayServicesUtil.isGooglePlayServicesAvailable(getActivity()) == ConnectionResult.SUCCESS) {
+                disableViews();
+                displayPlacePicker();
+            }
+
         }
     };
     private ChildEventListener mUsersDataChangeListener = new ChildEventListener() {
@@ -179,6 +184,8 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
     private ChildEventListener mChatMessageListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+            FirebaseHelper.getRoot().child("private_conversation").child(ChatHelper.getConversationKey(mCurrentUser))
+                    .child(dataSnapshot.getKey()).child("seen").setValue(true);
             new AddMessageToList().execute(dataSnapshot);
         }
 
@@ -199,7 +206,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
 
         @Override
         public void onCancelled(FirebaseError firebaseError) {
-            Log.d(TAG,"onCancelled");
+            Log.d(TAG, "onCancelled");
         }
     };
     private View.OnClickListener mChatSendBtnListener = new View.OnClickListener() {
@@ -235,6 +242,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
             }
         }
     };
+
     private void beginCrop(Uri source) {
         Uri destination = Uri.fromFile(new File(getActivity().getCacheDir(), "cropped"));
         Crop.of(source, destination).asSquare().withMaxSize(720, 1280).start(getActivity());
@@ -248,13 +256,12 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
 
         } else if (requestCode == Crop.REQUEST_CROP && resultCode == Activity.RESULT_OK) {
             //the image has been cropped and ready to upload
-            SnackbarHelper.create(mRootView,"Uploading Image").setDuration(Snackbar.LENGTH_INDEFINITE).show();
+            SnackbarHelper.create(mRootView, "Uploading Image").setDuration(Snackbar.LENGTH_INDEFINITE).show();
             new ImageUploadTask().execute();
-        }
-        else if( requestCode == PLACE_PICKER_REQUEST && resultCode == Activity.RESULT_OK ) {
+        } else if (requestCode == PLACE_PICKER_REQUEST && resultCode == Activity.RESULT_OK) {
             //sendMessage
-            Place place =  PlacePicker.getPlace(data, getActivity());
-            if(place.getName()!=null && place.getLatLng() != null){
+            Place place = PlacePicker.getPlace(data, getActivity());
+            if (place.getName() != null && place.getLatLng() != null) {
                 Message msg = new Message();
                 msg.setLocationLat(place.getLatLng().latitude);
                 msg.setLocationLong(place.getLatLng().longitude);
@@ -266,8 +273,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
                     }
                 });
             }
-        }
-        else if(resultCode == Activity.RESULT_CANCELED){
+        } else if (resultCode == Activity.RESULT_CANCELED) {
             enableViews();
         }
     }
@@ -310,33 +316,38 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
 
         return fragment;
     }
+
     public static ChatFragment newInstance(String userId) {
         ChatFragment fragment = new ChatFragment();
         Bundle args = new Bundle();
-        args.putString(CURRENT_USER,userId);
+        args.putString(CURRENT_USER, userId);
         fragment.setArguments(args);
         return fragment;
     }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mUsers = new ArrayList<>();
         mMessages = new ArrayList<>();
+
         mGoogleApiClient = new GoogleApiClient
                 .Builder(getActivity())
-                .enableAutoManage(getActivity(), 0, this )
-                .addApi( Places.GEO_DATA_API )
-                .addApi( Places.PLACE_DETECTION_API )
-                .addConnectionCallbacks( this )
-                .addOnConnectionFailedListener( this )
+                .enableAutoManage(getActivity(), 0, this)
+                .addApi(Places.GEO_DATA_API)
+                .addApi(Places.PLACE_DETECTION_API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
                 .build();
+
         mChatFriendListAdapter = new ChatFriendListAdapter(getActivity(), R.layout.chat_friends_list_item, mUsers);
-        if(getArguments() != null){
+        if (getArguments() != null) {
             mCurrentUser = getArguments().getString(CURRENT_USER);
-            if(ChatService.getInstance() != null)
+            if (ChatService.getInstance() != null)
                 new ResetSeen().execute(ChatHelper.getConversationKey(mCurrentUser));
         }
     }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -356,7 +367,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
             }
         });
         if (mCurrentUser != null) {
-            Integer i=null;
+            Integer i = null;
             try {
 
                 i = new GetIndexTask().execute(mCurrentUser).get();
@@ -389,7 +400,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
             public void onDataChange(DataSnapshot dataSnapshot) {
                 hideChatProgress();
                 hideFriendsListProgress();
-                if(mCurrentUser != null && !dataSnapshot.child(ChatHelper.getConversationKey(mCurrentUser)).exists()){
+                if (mCurrentUser != null && !dataSnapshot.child(ChatHelper.getConversationKey(mCurrentUser)).exists()) {
                     showNoMessage();
                 }
                 FirebaseHelper.getRoot().child("private_conversation").removeEventListener(this);
@@ -403,13 +414,16 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
         return view;
     }
 
-    public void updateChatMessageListener() {
 
+    public void updateChatMessageListener() {
         if (mCurrentUser != null && ChatHelper.getConversationKey(mCurrentUser) != null) {
-            mMessages.clear();
-            mChatAdapter.notifyDataSetChanged();
+            Log.d(TAG,"previous key = "+mPreviousKey+" ,current key="+ChatHelper.getConversationKey(mCurrentUser));
             String conversationKey = ChatHelper.getConversationKey(mCurrentUser);
             new ResetSeen().execute(conversationKey);
+            if (mPreviousKey != null)
+                FirebaseHelper.getRoot().child("private_conversation").child(mPreviousKey)
+                        .orderByChild("timestamp").limitToLast(30).removeEventListener(mChatMessageListener);
+
             FirebaseHelper.getRoot().child("private_conversation").child(conversationKey)
                     .orderByChild("timestamp").limitToLast(30).removeEventListener(mChatMessageListener);
             FirebaseHelper.getRoot().child("private_conversation").child(conversationKey)
@@ -435,16 +449,23 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
 
     @Override
     public void onPause() {
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.disconnect();
+        }
+        if (mCurrentUser != null && ChatHelper.getConversationKey(mCurrentUser) != null) {
+            FirebaseHelper.getRoot().child("private_conversation").child(ChatHelper.getConversationKey(mCurrentUser))
+                    .orderByChild("timestamp").limitToLast(30).removeEventListener(mChatMessageListener);
+            //add listener on last conversation key so that chatservice can send notifications for
+            ChatService.getInstance().setListenerFor(ChatHelper.getConversationKey(mCurrentUser));
+        }
         super.onPause();
-        if(mCurrentUser!=null && ChatHelper.getConversationKey(mCurrentUser)!=null)
-        FirebaseHelper.getRoot().child("private_conversation").child(ChatHelper.getConversationKey(mCurrentUser))
-                .orderByChild("timestamp").limitToLast(30).removeEventListener(mChatMessageListener);
+
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        if( mGoogleApiClient != null) {
+        if (mGoogleApiClient != null) {
             if (!mGoogleApiClient.isConnected() || !mGoogleApiClient.isConnecting()) {
                 mGoogleApiClient.connect();
             }
@@ -453,23 +474,22 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
 
     @Override
     public void onStop() {
-        if( mGoogleApiClient != null && mGoogleApiClient.isConnected() ) {
-            mGoogleApiClient.disconnect();
-        }
+
         super.onStop();
     }
+
     private void displayPlacePicker() {
-        if( mGoogleApiClient == null || !mGoogleApiClient.isConnected() )
+        if (mGoogleApiClient == null || !mGoogleApiClient.isConnected())
             return;
 
         PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
 
         try {
-            startActivityForResult( builder.build( getActivity()), PLACE_PICKER_REQUEST );
-        } catch ( GooglePlayServicesRepairableException e ) {
-            Log.d(TAG, "GooglePlayServicesRepairableException thrown" );
-        } catch ( GooglePlayServicesNotAvailableException e ) {
-            Log.d( TAG, "GooglePlayServicesNotAvailableException thrown" );
+            startActivityForResult(builder.build(getActivity()), PLACE_PICKER_REQUEST);
+        } catch (GooglePlayServicesRepairableException e) {
+            Log.d(TAG, "GooglePlayServicesRepairableException thrown");
+        } catch (GooglePlayServicesNotAvailableException e) {
+            Log.d(TAG, "GooglePlayServicesNotAvailableException thrown");
         }
     }
 
@@ -513,6 +533,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
     private void hideNoMessage() {
         mNoMessage.setVisibility(View.GONE);
     }
+
     private void showNoMessage() {
         mNoMessage.setVisibility(View.VISIBLE);
     }
@@ -656,13 +677,10 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
             if (integer != null) {
                 if (mCurrentUser == null) {
                     mCurrentUser = mUsers.get(0).getId();
-                    if(ChatHelper.getConversationKey(mCurrentUser)!=null)
-                    FirebaseHelper.getRoot().child("private_conversation").child(ChatHelper.getConversationKey(mCurrentUser))
-                            .orderByChild("timestamp").limitToLast(30).addChildEventListener(mChatMessageListener);
+                    updateChatMessageListener();
                     mChatMsgEditText.setHint("Send Message to " + mUsers.get(0).getFirstName());
-                }
-                else {
-                    Integer i=null;
+                } else {
+                    Integer i = null;
                     try {
                         i = new GetIndexTask().execute(mCurrentUser).get();
                         if (i != null) {
@@ -672,8 +690,6 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
                     } catch (InterruptedException | ExecutionException e) {
                         e.printStackTrace();
                     }
-
-                    updateChatMessageListener();
                 }
                 hideFriendsListProgress();
                 mChatFriendListAdapter.notifyDataSetChanged();
@@ -694,7 +710,9 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
         @Override
         protected void onPostExecute(Integer integer) {
             super.onPostExecute(integer);
-            if(integer != null) {
+            if (integer != null) {
+                //if previous messages are being loaded then call notifyDataSetChanged otherwise use notifyItemInserted
+                //or it will show weird behaviour due to continous animations
                 if (mSendClicked)
                     mChatAdapter.notifyItemInserted(integer);
                 else
@@ -703,6 +721,10 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
                 mRecyclerView.scrollToPosition(integer);
                 hideChatProgress();
                 hideFriendsListProgress();
+
+                //set mPreviousKey variable to current user's...mPreviousKey will be used next time the updateListener is called
+                mPreviousKey = ChatHelper.getConversationKey(mCurrentUser);
+
             }
         }
     }
@@ -719,6 +741,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
             return null;
         }
     }
+
     public class ImageUploadTask extends AsyncTask<Void, Void, String> {
 
         @Override
@@ -760,17 +783,15 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
         }
     }
 
-    private class ResetSeen extends AsyncTask<String,Void,Void>{
+    private class ResetSeen extends AsyncTask<String, Void, Void> {
         @Override
         protected Void doInBackground(String... strings) {
-            for (int i =0; i< mMessages.size();i++){
-                if(!mMessages.get(i).getSender().equals(FirebaseHelper.getAuthId()))
-                FirebaseHelper.getRoot().child("private_conversation").child(strings[0])
-                        .child(mMessages.get(i).getPush_key()).child("seen").setValue(true);
+            for (int i = 0; i < mMessages.size(); i++) {
+                if (!mMessages.get(i).getSender().equals(FirebaseHelper.getAuthId()))
+                    FirebaseHelper.getRoot().child("private_conversation").child(strings[0])
+                            .child(mMessages.get(i).getPush_key()).child("seen").setValue(true);
             }
-            Log.d(TAG, "calling removeNotificationsFor");
-            if(ChatService.getInstance()!=null) {//service may have not yet started
-
+            if (ChatService.getInstance() != null) {//service may have not yet started
                 ChatService.getInstance().removeNotificationsFor(strings[0]);
             }
             return null;
