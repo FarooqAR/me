@@ -21,6 +21,7 @@ import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by Farooq on 1/23/2016.
@@ -34,6 +35,8 @@ public class ChatService extends Service {
     public static int BROADCAST_REQUEST_CODE = 2341;
     private NotificationManager mNotificationManager;
     private static ChatService instance = null;
+    private NotifcationDismissReceiver receiver;
+    private String previousKey;//conversation key for which the messages were previously showing (ChatFragment)
 
     private ChildEventListener mPrivateChatListener = new ChildEventListener() {
         @Override
@@ -96,11 +99,12 @@ public class ChatService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.d(TAG, "ChatService Created");
         mConversations = new ArrayList<>();
         instance = this;
         Firebase.setAndroidContext(this);
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        NotifcationDismissReceiver receiver = new NotifcationDismissReceiver();
+        receiver = new NotifcationDismissReceiver();
         registerReceiver(receiver, new IntentFilter(RECEIVER));
     }
 
@@ -114,23 +118,32 @@ public class ChatService extends Service {
         new NotificationsRemoveTask().execute();
 
     }
-    public static ChatService getInstance(){
+
+    public static ChatService getInstance() {
         return instance;
     }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
+        Log.d(TAG, "ChatService started");
         FirebaseHelper.getRoot().addAuthStateListener(new Firebase.AuthStateListener() {
             @Override
             public void onAuthStateChanged(AuthData authData) {
                 if (FirebaseHelper.getAuthId() != null) {
                     updateListener();
-                    Log.d(TAG, "auth id=" + FirebaseHelper.getAuthId());
+                } else {
+                    FirebaseHelper.getRoot().removeAuthStateListener(this);
+                    stopSelf();
                 }
-                Log.d(TAG, "onAuthChange");
             }
         });
         return START_STICKY;
+    }
+
+    @Override
+    public boolean stopService(Intent name) {
+        Log.d(TAG, "ChatService stopped");
+        return super.stopService(name);
     }
 
 
@@ -174,7 +187,13 @@ public class ChatService extends Service {
     private class ConversationAddTask extends AsyncTask<Conversation, Void, Void> {
         @Override
         protected synchronized Void doInBackground(Conversation... conversations) {
+            for (int i = 0; i < mConversations.size(); i++) {
+                if (mConversations.get(i).getConversationKey().equals(conversations[0].getConversationKey())) {
+                    return null;
+                }
+            }
             mConversations.add(conversations[0]);
+            Log.d(TAG, "conversation=" + conversations[0].getConversationKey());
             return null;
         }
     }
@@ -195,7 +214,22 @@ public class ChatService extends Service {
     }
 
     public void removeNotificationsFor(String conversationKey) {
-        new NotificationRemoveTask().execute(conversationKey);
+        new RemoveNotificationFromChatFragment().execute(conversationKey);
+    }
+    public void setListenerFor(String conversationKey){
+        new SetNotificationFor().execute(conversationKey);
+    }
+    @Override
+    public void onDestroy() {
+
+        try {
+            new NotificationRemoveTask().execute().get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        unregisterReceiver(receiver);
+        Log.d(TAG, "ChatService destroyed");
+        super.onDestroy();
     }
 
     //it will be executed when a service is created or auth state is changed
@@ -203,6 +237,8 @@ public class ChatService extends Service {
         @Override
         protected Void doInBackground(Void... voids) {
             for (int i = 0; i < mConversations.size(); i++) {
+                mConversations.get(i).removeListener();
+                mConversations.get(i).getPushKeys().clear();
                 mNotificationManager.cancel(mConversations.get(i).getNotificationId());//cancel any existing notifications
             }
             mConversations.clear();
@@ -222,24 +258,78 @@ public class ChatService extends Service {
                     .addChildEventListener(mPrivateChatListener);
         }
     }
-
-    private class NotificationRemoveTask extends AsyncTask<String, Void, Void> {
+    //it will be executed when the chat service is completely destroyed
+    private class NotificationRemoveTask extends AsyncTask<Void, Void, Void> {
         @Override
-        protected Void doInBackground(String... strings) {
+        protected Void doInBackground(Void...voids) {
+
+                for (int i = 0; i < mConversations.size(); i++) {
+                    Conversation conversation = mConversations.get(i);
+                    conversation.removeListener();
+                    mNotificationManager.cancel(conversation.getNotificationId());//cancel any existing notifications
+                    conversation.getPushKeys().clear();
+                }
+            mConversations.clear();
+            return null;
+
+        }
+    }
+    private class SetNotificationFor extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... strings) {
             String conversationKey = strings[0];
-            Log.d(TAG,"removing notification");
+            for (int i = 0; i < mConversations.size(); i++) {
+                Conversation conversation = mConversations.get(i);
+                if (conversation.getConversationKey().equals(conversationKey)) {
+                    conversation.setListener();
+                    break;
+                }
+            }
+            return conversationKey;
+        }
+
+        @Override
+        protected void onPostExecute(String key) {
+            super.onPostExecute(key);
+            previousKey = key;
+        }
+    }
+    private class RemoveNotificationFromChatFragment extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... strings) {
+            String conversationKey = strings[0];
+
+            //if the chat for this conversation is visible then no need to notify user for new messages
             for (int i = 0; i < mConversations.size(); i++) {
                 Conversation conversation = mConversations.get(i);
                 if (conversation.getConversationKey().equals(conversationKey)) {
                     mNotificationManager.cancel(conversation.getNotificationId());//cancel any existing notifications related to given conversationkey
                     conversation.getPushKeys().clear();
-                    Log.d(TAG,"Notification Removed");
-                    return null;
+                    conversation.removeListener();
+                    break;
                 }
             }
-            mConversations.clear();
-            return null;
+            //set listener for previous conversation so that we can again get notification of that chat
+            if(previousKey!=null) {
+                for (int i = 0; i < mConversations.size(); i++) {
+                    Conversation conversation = mConversations.get(i);
+                    if (conversation.getConversationKey().equals(previousKey)) {
+                        conversation.getPushKeys().clear();
+                        conversation.removeListener();
+                        conversation.setListener();
+                        break;
+                    }
+                }
+            }
+            return conversationKey;
+
         }
 
+        @Override
+        protected void onPostExecute(String key) {
+            super.onPostExecute(key);
+            previousKey = key;
+        }
     }
 }
