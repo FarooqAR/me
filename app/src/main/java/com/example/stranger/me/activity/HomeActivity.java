@@ -15,6 +15,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -332,7 +333,7 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 String value = String.valueOf(dataSnapshot.getValue());
-                if(mNavHeaderAbout!=null) {
+                if(value.length()>0) {
                     mNavHeaderAbout.setText("" + value);
                     mNavHeaderAbout.setOnClickListener(null);
                 }
@@ -372,6 +373,7 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Log.d(TAG,"HomeActivity destroyed");
     }
 
     @Override

@@ -109,8 +109,9 @@ public class Conversation implements Parcelable{
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 String messagePushKey = dataSnapshot.getKey();
                 String sender = (String) dataSnapshot.child("sender").getValue();
-                if(!sender.equals(FirebaseHelper.getAuthId()))
-                new MessageAddTask().execute(messagePushKey);
+                if(!sender.equals(FirebaseHelper.getAuthId())) {
+                    new MessageAddTask().execute(messagePushKey);
+                }
             }
 
             @Override
@@ -204,34 +205,40 @@ public class Conversation implements Parcelable{
             return null;
         }
     }
-    class MessageAddTask extends AsyncTask<String,Void,Void>{
+    class MessageAddTask extends AsyncTask<String,Void,Boolean>{
 
         @Override
-        protected synchronized Void doInBackground(String... strings) {
+        protected synchronized Boolean doInBackground(String... strings) {
+            for (int i=0;i<pushKeys.size();i++){
+                if(pushKeys.get(i).equals(strings[0]))
+                    return false;
+            }
             pushKeys.add(strings[0]);
-            return null;
+            return true;
         }
 
         @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            Target target = new Target() {
-                @Override
-                public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                    new NotificationTask().execute(bitmap);
-                }
+        protected void onPostExecute(Boolean bool) {
+            super.onPostExecute(bool);
+            if (bool) {
+                Target target = new Target() {
+                    @Override
+                    public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                        new NotificationTask().execute(bitmap);
+                    }
 
-                @Override
-                public void onBitmapFailed(Drawable drawable) {
+                    @Override
+                    public void onBitmapFailed(Drawable drawable) {
 
-                }
+                    }
 
-                @Override
-                public void onPrepareLoad(Drawable drawable) {
+                    @Override
+                    public void onPrepareLoad(Drawable drawable) {
 
-                }
-            };
-            Picasso.with(getContext()).load(getFriendImageUrl()).into(target);
+                    }
+                };
+                Picasso.with(getContext()).load(getFriendImageUrl()).into(target);
+            }
         }
     }
 
