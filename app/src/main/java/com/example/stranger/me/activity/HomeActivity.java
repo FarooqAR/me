@@ -378,10 +378,10 @@ public class HomeActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
-        super.onStop();
         if (FirebaseHelper.getAuthId() != null) {
             FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("online").setValue(false);
         }
+        super.onStop();
     }
 
     @Override
