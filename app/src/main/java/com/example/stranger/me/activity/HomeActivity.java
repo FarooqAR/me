@@ -372,15 +372,16 @@ public class HomeActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        if (FirebaseHelper.getAuthId() != null) {
+            FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("online").setValue(false);
+        }
         super.onDestroy();
         Log.d(TAG,"HomeActivity destroyed");
     }
 
     @Override
     protected void onStop() {
-        if (FirebaseHelper.getAuthId() != null) {
-            FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("online").setValue(false);
-        }
+
         super.onStop();
     }
 
