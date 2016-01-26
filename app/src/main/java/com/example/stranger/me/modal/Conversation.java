@@ -11,7 +11,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
-import android.util.Log;
 
 import com.example.stranger.me.R;
 import com.example.stranger.me.activity.HomeActivity;
@@ -29,7 +28,7 @@ import java.util.ArrayList;
 /**
  * Created by Farooq on 1/23/2016.
  */
-public class Conversation implements Parcelable{
+public class Conversation implements Parcelable {
     private static final String TAG = "Conversation";
     private String friendId;
     private String friendName;
@@ -109,7 +108,7 @@ public class Conversation implements Parcelable{
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 String messagePushKey = dataSnapshot.getKey();
                 String sender = (String) dataSnapshot.child("sender").getValue();
-                if(!sender.equals(FirebaseHelper.getAuthId())) {
+                if (!sender.equals(FirebaseHelper.getAuthId())) {
                     new MessageAddTask().execute(messagePushKey);
                 }
             }
@@ -120,7 +119,7 @@ public class Conversation implements Parcelable{
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
-                Log.d(TAG, "onChildRemoved");
+                new MessageRemoveTask().execute(dataSnapshot.getKey());
             }
 
             @Override
@@ -134,10 +133,12 @@ public class Conversation implements Parcelable{
             }
         };
     }
-    public void setListener(){
+
+    public void setListener() {
         FirebaseHelper.getRoot().child("private_conversation").child(getConversationKey()).orderByChild("seen").equalTo(false).addChildEventListener(listener);
     }
-    public void removeListener(){
+
+    public void removeListener() {
         FirebaseHelper.getRoot().child("private_conversation").child(getConversationKey()).removeEventListener(listener);
     }
 
@@ -151,10 +152,12 @@ public class Conversation implements Parcelable{
         parcel.writeSerializable(getPushKeys());
         parcel.writeString(getConversationKey());
     }
-    private Conversation(Parcel in){
+
+    private Conversation(Parcel in) {
         setPushKeys((ArrayList<String>) in.readSerializable());
         setConversationKey(in.readString());
     }
+
     public static final Parcelable.Creator<Conversation> CREATOR = new Creator<Conversation>() {
         @Override
         public Conversation createFromParcel(Parcel parcel) {
@@ -166,18 +169,19 @@ public class Conversation implements Parcelable{
             return new Conversation[i];
         }
     };
-    class NotificationTask extends AsyncTask<Bitmap,Void,Void>{
+
+    class NotificationTask extends AsyncTask<Bitmap, Void, Void> {
 
         @Override
-        protected synchronized Void doInBackground(Bitmap ... bitmaps) {
+        protected synchronized Void doInBackground(Bitmap... bitmaps) {
             Bitmap bitmap = bitmaps[0];
-            String msgWord = (getPushKeys().size()==1) ? "message": "messages";
+            String msgWord = (getPushKeys().size() == 1) ? "message" : "messages";
             NotificationCompat.Builder mBuilder =
                     new NotificationCompat.Builder(getContext())
                             .setLargeIcon(bitmap)
                             .setSmallIcon(R.mipmap.ic_launcher)
-                            .setContentTitle(getPushKeys().size()+" unread "+msgWord)
-                            .setContentText(getFriendName()+" sent you "+getPushKeys().size()+" "+msgWord);
+                            .setContentTitle(getPushKeys().size() + " unread " + msgWord)
+                            .setContentText(getFriendName() + " sent you " + getPushKeys().size() + " " + msgWord);
 
             Intent intent = new Intent(ChatService.RECEIVER);
             intent.putExtra("notificationConversation", Conversation.this);
@@ -185,7 +189,7 @@ public class Conversation implements Parcelable{
             mBuilder.setDeleteIntent(pendingIntent);
 
             Intent resultIntent = new Intent(getContext(), MainActivity.class);
-            resultIntent.putExtra(HomeActivity.FRIEND_ID,friendId);
+            resultIntent.putExtra(HomeActivity.FRIEND_ID, friendId);
 
             TaskStackBuilder stackBuilder = TaskStackBuilder.create(getContext());
 
@@ -205,12 +209,13 @@ public class Conversation implements Parcelable{
             return null;
         }
     }
-    class MessageAddTask extends AsyncTask<String,Void,Boolean>{
+
+    class MessageAddTask extends AsyncTask<String, Void, Boolean> {
 
         @Override
         protected synchronized Boolean doInBackground(String... strings) {
-            for (int i=0;i<pushKeys.size();i++){
-                if(pushKeys.get(i).equals(strings[0]))
+            for (int i = 0; i < pushKeys.size(); i++) {
+                if (pushKeys.get(i).equals(strings[0]))
                     return false;
             }
             pushKeys.add(strings[0]);
@@ -242,4 +247,17 @@ public class Conversation implements Parcelable{
         }
     }
 
+    private class MessageRemoveTask extends AsyncTask<String, Void, Void> {
+        @Override
+        protected Void doInBackground(String... strings) {
+            String pushKey = strings[0];
+            for (int i = 0; i < getPushKeys().size(); i++) {
+                if(getPushKeys().get(i).equals(pushKey)){
+                    getPushKeys().remove(i);
+                    return null;
+                }
+            }
+            return null;
+        }
+    }
 }
