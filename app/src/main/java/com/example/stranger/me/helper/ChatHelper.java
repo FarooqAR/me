@@ -47,14 +47,14 @@ public class ChatHelper {
                 e.printStackTrace();
             }
             final String finalConversation_key = conversation_key;
-            FirebaseHelper.getRoot().child("private_chat").child(FirebaseHelper.getAuthId()).child(user_id).setValue(conversation_key, new Firebase.CompletionListener() {
+            FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CHAT).child(FirebaseHelper.getAuthId()).child(user_id).setValue(conversation_key, new Firebase.CompletionListener() {
                 @Override
                 public void onComplete(FirebaseError firebaseError, Firebase firebase) {
                     if (firebaseError == null) {
-                        FirebaseHelper.getRoot().child("private_chat").child(user_id).child(FirebaseHelper.getAuthId()).setValue(finalConversation_key, new Firebase.CompletionListener() {
+                        FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CHAT).child(user_id).child(FirebaseHelper.getAuthId()).setValue(finalConversation_key, new Firebase.CompletionListener() {
                             @Override
                             public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                                Firebase ref = FirebaseHelper.getRoot().child("private_conversation").child(finalConversation_key).push();
+                                Firebase ref = FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(finalConversation_key).push();
                                 new MessageHandler(ref,message,listener);
                             }
                         });
@@ -63,7 +63,7 @@ public class ChatHelper {
             });
 
         } else {
-            Firebase ref = FirebaseHelper.getRoot().child("private_conversation").child(con_key).push();
+            Firebase ref = FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(con_key).push();
             new MessageHandler(ref,message,listener);
         }
     }
