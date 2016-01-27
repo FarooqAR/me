@@ -199,7 +199,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
 
         @Override
         public void onChildRemoved(DataSnapshot dataSnapshot) {
-            new RemoveMessageFromList().execute(dataSnapshot);
+
         }
 
         @Override
@@ -262,6 +262,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
             //the image has been cropped and ready to upload
             SnackbarHelper.create(mRootView, "Uploading Image").setDuration(Snackbar.LENGTH_INDEFINITE).show();
             new ImageUploadTask().execute();
+
         } else if (requestCode == PLACE_PICKER_REQUEST && resultCode == Activity.RESULT_OK) {
             //sendMessage
             Place place = PlacePicker.getPlace(data, getActivity());
@@ -431,15 +432,18 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
                     .orderByChild("timestamp").limitToLast(30).removeEventListener(mChatMessageListener);
         FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(conversationKey)
                 .orderByChild("timestamp").limitToLast(30).removeEventListener(mChatMessageListener);
+
     }
+
     public void addListeners(){
         String conversationKey = ChatHelper.getConversationKey(mCurrentUser);
         FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(conversationKey)
                 .orderByChild("timestamp").startAt().limitToLast(30).addChildEventListener(mChatMessageListener);
+
+
     }
     public void updateChatMessageListener() {
         if (mCurrentUser != null && ChatHelper.getConversationKey(mCurrentUser) != null) {
-            Log.d(TAG, "previous key = " + mPreviousKey + " ,current key=" + ChatHelper.getConversationKey(mCurrentUser));
             String conversationKey = ChatHelper.getConversationKey(mCurrentUser);
             new ResetSeen().execute(conversationKey);
             removeListeners();
@@ -724,6 +728,12 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
         protected synchronized Integer doInBackground(DataSnapshot... params) {
             Message message = params[0].getValue(Message.class);
             message.setPush_key(params[0].getKey());
+            //it's surely a bad design to check for every message by looping through entire array which can be as big as....100 messages .it will
+            //take a while to show a single message, it is just to ensure that a message is not shown twice or more
+            for (int i=0;i<mMessages.size();i++){
+                if(mMessages.get(i).getPush_key().equals(message.getPush_key()))
+                    return null;
+            }
             mMessages.add(message);
             return mMessages.indexOf(message);
         }
@@ -750,30 +760,6 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
         }
     }
 
-    private class RemoveMessageFromList extends AsyncTask<DataSnapshot, Void, Integer> {
-        @Override
-        protected synchronized Integer doInBackground(DataSnapshot... params) {
-            Message message = params[0].getValue(Message.class);
-            message.setPush_key(params[0].getKey());
-            for (int i = 0; i < mMessages.size(); i++) {
-                if (mMessages.get(i).getPush_key().equals(message.getPush_key())) {
-                    mMessages.remove(i);
-                    break;
-                }
-            }
-
-            return mMessages.indexOf(message);
-        }
-
-        @Override
-        protected void onPostExecute(Integer integer) {
-            super.onPostExecute(integer);
-            if (integer != null) {
-                mChatAdapter.notifyItemRemoved(integer);
-                mRecyclerView.scrollToPosition(mMessages.size()-1);
-            }
-        }
-    }
 
     private class GetIndexTask extends AsyncTask<String, Void, Integer> {
 
