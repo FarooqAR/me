@@ -8,7 +8,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -20,32 +19,63 @@ import android.widget.RelativeLayout;
 import com.example.stranger.me.CustomLinearLayoutManager;
 import com.example.stranger.me.R;
 import com.example.stranger.me.adapter.GroupListAdapter;
+import com.example.stranger.me.helper.FirebaseHelper;
 import com.example.stranger.me.helper.GroupHelper;
 import com.example.stranger.me.helper.SnackbarHelper;
 import com.example.stranger.me.modal.Group;
 import com.example.stranger.me.widget.RobotoEditText;
+import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 
 import java.util.ArrayList;
 
-public class GroupListFragment extends Fragment implements GroupListAdapter.OnGroupChangeListener{
-    private static ViewPager mParentViewPager;
+public class GroupListFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
     private RobotoEditText mFindGroupEditText;
     private ImageButton mFindGroupBtn;
+    private ImageButton mRefreshBtn;
     private RecyclerView mRecyclerView;
     private GroupListAdapter mAdapter;
     private ArrayList<Group> mGroups;
     private FloatingActionButton mAddGroupBtn;
     private RelativeLayout mRootView;
+
+    private ChildEventListener mGroupListener = new ChildEventListener() {
+        @Override
+        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+            new GroupAddTask().execute(dataSnapshot);
+        }
+
+        @Override
+        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            new GroupChangeTask().execute(dataSnapshot);
+        }
+
+        @Override
+        public void onChildRemoved(DataSnapshot dataSnapshot) {
+            new GroupRemoveTask().execute(dataSnapshot.getKey());
+        }
+
+        @Override
+        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onCancelled(FirebaseError firebaseError) {
+
+        }
+    };
     private View.OnClickListener mFindGroupBtnListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             String text = String.valueOf(mFindGroupEditText.getText());
             if (!text.equals("")) {
                 mGroups.clear();
+                mAdapter.notifyDataSetChanged();
+                removeListeners();
                 String[] splitted = text.split(" ");
                 if (splitted.length > 1) {
                     new GroupFindTask().execute(splitted[0], splitted[1]);
@@ -61,7 +91,18 @@ public class GroupListFragment extends Fragment implements GroupListAdapter.OnGr
             openAddGroupDialog();
         }
     };
-
+    private View.OnClickListener mRefreshBtnListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            refresh();
+        }
+    };
+    public void refresh(){
+        mGroups.clear();
+        mAdapter.notifyDataSetChanged();
+        removeListeners();
+        addListeners();
+    }
     public GroupListFragment() {
         // Required empty public constructor
     }
@@ -116,13 +157,11 @@ public class GroupListFragment extends Fragment implements GroupListAdapter.OnGr
 
         return fragment;
     }
-    public void setParentViewPager(ViewPager viewPager){
-        mParentViewPager = viewPager;
-    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mGroups=new ArrayList<>();
+        mGroups = new ArrayList<>();
 
     }
 
@@ -135,17 +174,23 @@ public class GroupListFragment extends Fragment implements GroupListAdapter.OnGr
         mFindGroupBtn.setOnClickListener(mFindGroupBtnListener);
         mAddGroupBtn.setOnClickListener(mAddGroupBtnListener);
         mAdapter = new GroupListAdapter(getActivity(), mGroups);
-        mAdapter.setParentViewPager(mParentViewPager);
-        mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(getActivity(),LinearLayoutManager.VERTICAL,false));
+        mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
         mRecyclerView.setAdapter(mAdapter);
-        if(GroupHelper.getGROUPS()!=null){
-            new GroupAddTask().execute();
-        }
+        mRefreshBtn.setOnClickListener(mRefreshBtnListener);
         return view;
+    }
+
+    public void addListeners() {
+        FirebaseHelper.getRoot().child(FirebaseHelper.GROUPS).addChildEventListener(mGroupListener);
+    }
+
+    public void removeListeners() {
+        FirebaseHelper.getRoot().child(FirebaseHelper.GROUPS).removeEventListener(mGroupListener);
     }
 
     private void init(View view) {
         mFindGroupBtn = (ImageButton) view.findViewById(R.id.action_find_group);
+        mRefreshBtn = (ImageButton) view.findViewById(R.id.action_refresh_groups);
         mRecyclerView = (RecyclerView) view.findViewById(R.id.groups_recyclerview);
         mFindGroupEditText = (RobotoEditText) view.findViewById(R.id.find_group_edittext);
         mAddGroupBtn = (FloatingActionButton) view.findViewById(R.id.action_group_add);
@@ -169,10 +214,9 @@ public class GroupListFragment extends Fragment implements GroupListAdapter.OnGr
     }
 
     @Override
-    public void onGroupChange() {
-
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
     }
-
 
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(Uri uri);
@@ -185,7 +229,7 @@ public class GroupListFragment extends Fragment implements GroupListAdapter.OnGr
         @Override
         protected Integer doInBackground(String... text) {
             String text1 = text[0].toLowerCase();
-            String text2 = (text.length>1)?text[1].toLowerCase():"?/>";
+            String text2 = (text.length > 1) ? text[1].toLowerCase() : "?/>";
             for (DataSnapshot groupSnapshot : GroupHelper.getGROUPS().getChildren()) {
                 Group group = groupSnapshot.getValue(Group.class);
                 group.setKey(groupSnapshot.getKey());
@@ -210,23 +254,81 @@ public class GroupListFragment extends Fragment implements GroupListAdapter.OnGr
         }
     }
 
-    public class GroupAddTask extends AsyncTask<Void, Void, Integer> {
+    public class GroupAddTask extends AsyncTask<DataSnapshot, Void, Integer> {
 
         @Override
-        protected Integer doInBackground(Void... text) {
-            mGroups.clear();
-            for (DataSnapshot groupSnapshot : GroupHelper.getGROUPS().getChildren()) {
-                Group group = groupSnapshot.getValue(Group.class);
-                group.setKey(groupSnapshot.getKey());
-                mGroups.add(group);
+        protected Integer doInBackground(DataSnapshot... dataSnapshots) {
+            DataSnapshot groupSnapShot = dataSnapshots[0];
+            Group group = groupSnapShot.getValue(Group.class);
+            if (group == null || mGroups == null) {
+                cancel(true);
+            } else {
+                if (!isCancelled()) {
+                    group.setKey(groupSnapShot.getKey());
+                    mGroups.add(group);
+                }
             }
-            return mGroups.size();
+            return mGroups.indexOf(group);
         }
 
         @Override
         protected void onPostExecute(Integer integer) {
             super.onPostExecute(integer);
-            mAdapter.notifyItemRangeInserted(0,integer);
+            mAdapter.notifyItemInserted(integer);
+        }
+    }
+
+    public class GroupRemoveTask extends AsyncTask<String, Void, Integer> {
+
+        @Override
+        protected Integer doInBackground(String... keys) {
+            String groupKey = keys[0];
+            if (groupKey == null) {
+                cancel(true);
+            }
+            if (!isCancelled()) {
+                for (int i = 0; i < mGroups.size(); i++) {
+                    Group group = mGroups.get(i);
+                    if (group.getKey().equals(groupKey)) {
+                        mGroups.remove(group);
+                        return i;
+                    }
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Integer integer) {
+            super.onPostExecute(integer);
+            if (integer != null) {
+                mAdapter.notifyItemRemoved(integer);
+            }
+        }
+    }
+
+    private class GroupChangeTask extends AsyncTask<DataSnapshot,Void,Integer>{
+        @Override
+        protected Integer doInBackground(DataSnapshot...dataSnapshots) {
+            String key = dataSnapshots[0].getKey();
+            Group newGroup = dataSnapshots[0].getValue(Group.class);
+            newGroup.setKey(key);
+            for (int i = 0; i < mGroups.size(); i++) {
+                Group group = mGroups.get(i);
+                if (group.getKey().equals(key)) {
+                    mGroups.set(i, newGroup);
+                    return i;
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Integer integer) {
+            super.onPostExecute(integer);
+            if(integer!=null){
+                mAdapter.notifyItemChanged(integer);
+            }
         }
     }
 }
