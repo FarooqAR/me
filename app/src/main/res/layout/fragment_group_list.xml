@@ -35,6 +35,14 @@
                 android:layout_weight="1"
                 android:id="@+id/action_find_group"
                 android:src="@drawable/ic_search_gray_24dp"/>
+            <ImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:padding="10dp"
+                style="@style/Base.Widget.AppCompat.Toolbar.Button.Navigation"
+                android:id="@+id/action_refresh_groups"
+                android:src="@drawable/ic_refresh_gray_24dp"/>
         </LinearLayout>
     </android.support.v7.widget.CardView>
     <android.support.v7.widget.RecyclerView
