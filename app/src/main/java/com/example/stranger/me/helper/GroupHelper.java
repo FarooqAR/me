@@ -16,34 +16,10 @@ import java.util.UUID;
  * Created by Farooq on 1/19/2016.
  */
 public class GroupHelper {
-    public static final String CHAT_GROUP_KEY = "_current_chat_group_key";
     private static DataSnapshot GROUPS = null;
     private static DataSnapshot MEMBERS = null;
     private static DataSnapshot GROUP_REQUESTS = null;
-    private static String CURRENT_GROUP=null;
 
-    /**
-     *
-     * @return id of previous group key
-     */
-    public static String getPreviousGroup() {
-        return PREVIOUS_GROUP;
-    }
-
-    public static void setPreviousGroup(String previousGroup) {
-        PREVIOUS_GROUP = previousGroup;
-    }
-
-    private static String PREVIOUS_GROUP=null;
-
-    public static String getCurrentGroup() {
-
-        return CURRENT_GROUP;
-    }
-
-    public static void setCurrentGroup(String currentGroup) {
-        CURRENT_GROUP = currentGroup;
-    }
 
     public static DataSnapshot getGroupRequests() {
         return GROUP_REQUESTS;
@@ -60,10 +36,7 @@ public class GroupHelper {
     public static void setMEMBERS(DataSnapshot MEMBERS) {
         GroupHelper.MEMBERS = MEMBERS;
     }
-    public static String getGroupTitle(String groupKey){
-        String title = (String) getGROUPS().child(groupKey).child("name").getValue();
-        return title;
-    }
+
     public static DataSnapshot getGROUPS() {
         return GROUPS;
     }
@@ -107,21 +80,21 @@ public class GroupHelper {
     }
 
     public static void sendRequest(String userId, String groupKey, Firebase.CompletionListener listener) {
-        FirebaseHelper.getRoot().child("group_requests").child(groupKey).child(userId).child("seen").setValue(false, listener);
+        FirebaseHelper.getRoot().child(FirebaseHelper.GROUP_REQUESTS).child(groupKey).child(userId).child("seen").setValue(false, listener);
     }
 
     public static void deleteGroup(final String groupKey, final Firebase.CompletionListener listener) {
         //delete posts as well
-        FirebaseHelper.getRoot().child("group_requests").child(groupKey).removeValue(new Firebase.CompletionListener() {
+        FirebaseHelper.getRoot().child(FirebaseHelper.GROUP_REQUESTS).child(groupKey).removeValue(new Firebase.CompletionListener() {
             @Override
             public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                FirebaseHelper.getRoot().child("group_members").child(groupKey).removeValue(new Firebase.CompletionListener() {
+                FirebaseHelper.getRoot().child(FirebaseHelper.GROUP_MEMBERS).child(groupKey).removeValue(new Firebase.CompletionListener() {
                     @Override
                     public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                        FirebaseHelper.getRoot().child("group_conversation").child(getConversationKey(groupKey)).removeValue(new Firebase.CompletionListener() {
+                        FirebaseHelper.getRoot().child(FirebaseHelper.GROUP_CONVERSATION).child(getConversationKey(groupKey)).removeValue(new Firebase.CompletionListener() {
                             @Override
                             public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                                FirebaseHelper.getRoot().child("groups").child(groupKey).removeValue(listener);
+                                FirebaseHelper.getRoot().child(FirebaseHelper.GROUPS).child(groupKey).removeValue(listener);
                             }
                         });
                     }
@@ -131,8 +104,8 @@ public class GroupHelper {
 
 
     }
-    public static void sendMessage(String group_key, com.example.stranger.me.modal.Message message,Firebase.CompletionListener listener){
-        Firebase ref= FirebaseHelper.getRoot().child("group_conversation").child(group_key).push();
+    public static void sendMessage(String con_key, com.example.stranger.me.modal.Message message,Firebase.CompletionListener listener){
+        Firebase ref= FirebaseHelper.getRoot().child(FirebaseHelper.GROUP_CONVERSATION).child(con_key).push();
         new MessageHandler(ref,message,listener);
     }
     public static long getAccessLevel(String userId, String groupKey) {
@@ -170,12 +143,13 @@ public class GroupHelper {
 
         @Override
         public void handleMessage(Message msg) {
-            FirebaseHelper.getRoot().child("groups").updateChildren(group, new Firebase.CompletionListener() {
+            addMember(FirebaseHelper.getAuthId(), group_key, 3, new Firebase.CompletionListener() {
                 @Override
                 public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                    addMember(FirebaseHelper.getAuthId(), group_key, 3, listener);//3 for admin
+                    FirebaseHelper.getRoot().child("groups").updateChildren(group, listener);
                 }
             });
+
         }
     }
     static class MessageHandler extends Handler{
