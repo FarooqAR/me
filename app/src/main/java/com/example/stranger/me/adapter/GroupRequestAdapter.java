@@ -52,8 +52,6 @@ public class GroupRequestAdapter extends RecyclerView.Adapter<GroupRequestAdapte
                     public void onComplete(FirebaseError firebaseError, Firebase firebase) {
                         if (firebaseError == null) {
                             holder.add.setEnabled(true);
-                            mRequests.remove(position);
-                            GroupRequestAdapter.this.notifyItemRemoved(position);
                         }
                     }
                 });
