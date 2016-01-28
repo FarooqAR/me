@@ -30,6 +30,7 @@ public class ChatHelper {
     public static String getConversationKey(String id) {
         String key = null;
         try {
+            if(id!=null)
             key = new ConversationKeyTask().execute(id).get();
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
