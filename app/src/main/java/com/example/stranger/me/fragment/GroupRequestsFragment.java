@@ -7,15 +7,14 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.stranger.me.CustomLinearLayoutManager;
 import com.example.stranger.me.R;
-import com.example.stranger.me.adapter.GroupListAdapter;
 import com.example.stranger.me.adapter.GroupRequestAdapter;
 import com.example.stranger.me.helper.FirebaseHelper;
 import com.example.stranger.me.helper.GroupHelper;
@@ -26,12 +25,16 @@ import com.firebase.client.FirebaseError;
 
 import java.util.ArrayList;
 
-public class GroupRequestsFragment extends Fragment implements GroupListAdapter.OnGroupChangeListener {
+public class GroupRequestsFragment extends Fragment{
     private static final String TAG = "GroupRequests";
+    private static final String GROUP_KEY = "group_key";
     private OnFragmentInteractionListener mListener;
     private RecyclerView mRecyclerView;
     private TextView mNoNewRequests;
+    private TextView mAccessRestrict;
     private GroupRequestAdapter mAdapter;
+    private LinearLayout mRequestsProgress;
+    private String mGroupKey;
     private ArrayList<User> mRequests;
     private ChildEventListener mRequestListener = new ChildEventListener() {
         @Override
@@ -41,27 +44,32 @@ public class GroupRequestsFragment extends Fragment implements GroupListAdapter.
 
         @Override
         public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
         }
 
         @Override
         public void onChildRemoved(DataSnapshot dataSnapshot) {
-
+            new RemoveRequestTask().execute(dataSnapshot.getKey());
         }
 
         @Override
         public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
         }
 
         @Override
         public void onCancelled(FirebaseError firebaseError) {
-            Log.d(TAG, "onCancelled request");
         }
     };
 
     public GroupRequestsFragment() {
         // Required empty public constructor
+    }
+
+    public static GroupRequestsFragment newInstance(String mGroupKey) {
+        GroupRequestsFragment fragment = new GroupRequestsFragment();
+        Bundle args = new Bundle();
+        args.putString(GROUP_KEY, mGroupKey);
+        fragment.setArguments(args);
+        return fragment;
     }
 
     public static GroupRequestsFragment newInstance() {
@@ -72,6 +80,10 @@ public class GroupRequestsFragment extends Fragment implements GroupListAdapter.
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if(getArguments()!=null){
+            mGroupKey = getArguments().getString(GROUP_KEY);
+        }
+        mRequests = new ArrayList<>();
     }
 
     @Override
@@ -80,18 +92,36 @@ public class GroupRequestsFragment extends Fragment implements GroupListAdapter.
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_group_requests, container, false);
         init(view);
-        if (GroupHelper.getCurrentGroup() != null && GroupHelper.getAccessLevel(FirebaseHelper.getAuthId(), GroupHelper.getCurrentGroup()) == 3) {
-            updateListener(GroupHelper.getCurrentGroup());
+        if (GroupHelper.getAccessLevel(FirebaseHelper.getAuthId(), mGroupKey) != -1) {
+            mAccessRestrict.setVisibility(View.GONE);
+            FirebaseHelper.getRoot().child(FirebaseHelper.GROUP_REQUESTS).child(mGroupKey).orderByChild("seen")
+                    .addChildEventListener(mRequestListener);
         } else {
+            mAccessRestrict.setVisibility(View.VISIBLE);
+            mRequestsProgress.setVisibility(View.GONE);
+        }
+        if(!GroupHelper.getGroupRequests().child(mGroupKey).exists()){
             mNoNewRequests.setVisibility(View.VISIBLE);
+            mRequestsProgress.setVisibility(View.GONE);
         }
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
+        mAdapter = new GroupRequestAdapter(getActivity(), mGroupKey, mRequests);
+        mRecyclerView.setAdapter(mAdapter);
         return view;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        FirebaseHelper.getRoot().child(FirebaseHelper.GROUP_REQUESTS).child(mGroupKey).orderByChild("seen")
+                .removeEventListener(mRequestListener);
     }
 
     private void init(View view) {
         mRecyclerView = (RecyclerView) view.findViewById(R.id.group_requests_recyclerview);
         mNoNewRequests = (TextView) view.findViewById(R.id.no_requests);
+        mAccessRestrict = (TextView) view.findViewById(R.id.access_restrict);
+        mRequestsProgress = (LinearLayout) view.findViewById(R.id.group_requests_progress);
     }
 
     @Override
@@ -104,32 +134,11 @@ public class GroupRequestsFragment extends Fragment implements GroupListAdapter.
         }
     }
 
+
     @Override
     public void onDetach() {
         super.onDetach();
         mListener = null;
-    }
-
-    @Override
-    public void onGroupChange() {
-        String groupKey = GroupHelper.getCurrentGroup();
-        if (GroupHelper.getAccessLevel(FirebaseHelper.getAuthId(), groupKey) == 3) {
-            mNoNewRequests.setVisibility(View.GONE);
-            updateListener(groupKey);
-        } else {
-            mNoNewRequests.setVisibility(View.VISIBLE);
-        }
-    }
-
-    private void updateListener(String groupKey) {
-        mRequests = new ArrayList<>();
-        mAdapter = new GroupRequestAdapter(getActivity(), groupKey, mRequests);
-        mRecyclerView.setAdapter(mAdapter);
-        if (GroupHelper.getPreviousGroup() != null)//it will be null for first time
-            FirebaseHelper.getRoot().child("group_requests").child(GroupHelper.getPreviousGroup()).removeEventListener(mRequestListener);
-
-        FirebaseHelper.getRoot().child("group_requests").child(groupKey).startAt().orderByChild("seen").addChildEventListener(mRequestListener);
-
     }
 
     public interface OnFragmentInteractionListener {
@@ -150,7 +159,31 @@ public class GroupRequestsFragment extends Fragment implements GroupListAdapter.
         protected void onPostExecute(Integer integer) {
             super.onPostExecute(integer);
             mNoNewRequests.setVisibility(View.GONE);
+            mRequestsProgress.setVisibility(View.GONE);
             mAdapter.notifyItemInserted(integer);
+        }
+    }
+
+    private class RemoveRequestTask extends AsyncTask<String,Void,Integer>{
+        @Override
+        protected Integer doInBackground(String... strings) {
+            String userId = strings[0];
+            for (int i=0;i<mRequests.size();i++){
+                User user = mRequests.get(i);
+                if(user.getId().equals(userId)) {
+                    mRequests.remove(i);
+                    return i;
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Integer integer) {
+            super.onPostExecute(integer);
+            if(integer!=null){
+                mAdapter.notifyItemRemoved(integer);
+            }
         }
     }
 }

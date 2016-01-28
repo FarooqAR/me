@@ -23,9 +23,7 @@ import android.widget.TextView;
 import com.cloudinary.utils.ObjectUtils;
 import com.example.stranger.me.CustomLinearLayoutManager;
 import com.example.stranger.me.R;
-import com.example.stranger.me.activity.HomeActivity;
 import com.example.stranger.me.adapter.ChatAdapter;
-import com.example.stranger.me.adapter.GroupListAdapter;
 import com.example.stranger.me.helper.CloudinaryHelper;
 import com.example.stranger.me.helper.FirebaseHelper;
 import com.example.stranger.me.helper.GroupHelper;
@@ -37,6 +35,7 @@ import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.firebase.client.ValueEventListener;
 import com.soundcloud.android.crop.Crop;
 
 import java.io.File;
@@ -44,8 +43,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 
-public class GroupConversationFragment extends Fragment implements GroupListAdapter.OnGroupChangeListener {
+public class GroupConversationFragment extends Fragment {
     private static final String TAG = "GroupChatFragment";
+    private static final String CONVERSATION_KEY = "conversation_key";
+    private static final String GROUP_KEY = "group_key";
+    private String mConversationKey;
     private OnFragmentInteractionListener mListener;
     private RecyclerView mRecyclerView;
     private RobotoEditText mChatEditText;
@@ -54,8 +56,8 @@ public class GroupConversationFragment extends Fragment implements GroupListAdap
     private ImageButton mChatMsgSendPhotoBtn;
     private ImageButton mChatMsgFaceBtn;
     private LinearLayout mChatProgress;
-    private TextView mSelectGroup;
     private TextView mAccessRestrict;
+    private TextView mNoMesssages;
     private int mChatMsgLength;
     private int mChatMsgLengthLeft;
     private int mChatMsgMaxLength = 150;
@@ -114,17 +116,18 @@ public class GroupConversationFragment extends Fragment implements GroupListAdap
 
         }
     };
+    private String mGroupKey;
     private View.OnClickListener mChatSendBtnListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            if (GroupHelper.getGROUPS() != null && GroupHelper.getAccessLevel(FirebaseHelper.getAuthId(), GroupHelper.getCurrentGroup()) != -1) {//if data has been retrieved
+            if (GroupHelper.getAccessLevel(FirebaseHelper.getAuthId(),mGroupKey ) != -1) {
                 String msg = String.valueOf(mChatEditText.getText());
                 if (!msg.equals("")) {
                     disableViews();
                     Message message = new Message(msg, FirebaseHelper.getAuthId());
                     mChatEditText.setText("");
                     mSendClicked = true;
-                    GroupHelper.sendMessage(GroupHelper.getCurrentGroup(), message, new Firebase.CompletionListener() {
+                    GroupHelper.sendMessage(mConversationKey, message, new Firebase.CompletionListener() {
                         @Override
                         public void onComplete(FirebaseError firebaseError, Firebase firebase) {
                             if (firebaseError != null) {
@@ -140,7 +143,7 @@ public class GroupConversationFragment extends Fragment implements GroupListAdap
     private View.OnClickListener mChatMsgSendPhotoBtnListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            if (GroupHelper.getGROUPS() != null && GroupHelper.getAccessLevel(FirebaseHelper.getAuthId(), GroupHelper.getCurrentGroup()) != -1) {
+            if (GroupHelper.getAccessLevel(FirebaseHelper.getAuthId(), mGroupKey) != -1) {
                 disableViews();
                 mSendClicked = true;
                 Crop.pickImage(getActivity());
@@ -166,35 +169,24 @@ public class GroupConversationFragment extends Fragment implements GroupListAdap
         // Required empty public constructor
     }
 
-    public static GroupConversationFragment newInstance() {
+    public static GroupConversationFragment newInstance(String mGroupConversation,String mGroupKey) {
         GroupConversationFragment fragment = new GroupConversationFragment();
-
+        Bundle args = new Bundle();
+        args.putString(CONVERSATION_KEY, mGroupConversation);
+        args.putString(GROUP_KEY,mGroupKey);
+        fragment.setArguments(args);
         return fragment;
     }
 
-    private void updateListeners(String groupkey) {
-        if (GroupHelper.getAccessLevel(FirebaseHelper.getAuthId(), groupkey) != -1) {
-            mMessages.clear();
-            mChatAdapter.notifyDataSetChanged();
-            mAccessRestrict.setVisibility(View.GONE);
-
-            if (GroupHelper.getPreviousGroup() != null)//it will be null for first time
-                FirebaseHelper.getRoot().child("group_conversation").child(GroupHelper.getPreviousGroup()).removeEventListener(mChatMessageListener);
-
-            FirebaseHelper.getRoot().child("group_conversation").child(groupkey).startAt().orderByChild("timestamp")
-                    .limitToLast(40).addChildEventListener(mChatMessageListener);
-
-        } else {
-            disableViews();
-            mChatProgress.setVisibility(View.GONE);
-            mAccessRestrict.setVisibility(View.VISIBLE);
-        }
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mMessages = new ArrayList<>();
+        if (getArguments() != null) {
+            mConversationKey = getArguments().getString(CONVERSATION_KEY);
+            mGroupKey = getArguments().getString(GROUP_KEY);
+        }
     }
 
     @Override
@@ -203,26 +195,39 @@ public class GroupConversationFragment extends Fragment implements GroupListAdap
 
         View view = inflater.inflate(R.layout.fragment_group_conversation, container, false);
         init(view);
+
         mChatAdapter = new ChatAdapter(getActivity(), mMessages);
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
         mRecyclerView.setAdapter(mChatAdapter);
         mChatAdapter.setRecyclerView(mRecyclerView);
-        if (GroupHelper.getCurrentGroup() != null) {
-            //update chat
-            String groupName = GroupHelper.getGroupTitle(GroupHelper.getCurrentGroup());
-            HomeActivity activity = (HomeActivity) getActivity();
-            activity.getSupportActionBar().setTitle(groupName);
-            mChatProgress.setVisibility(View.VISIBLE);
-            mSelectGroup.setVisibility(View.GONE);
-            updateListeners(GroupHelper.getCurrentGroup());
-        } else {
-            disableViews();
-            mChatProgress.setVisibility(View.GONE);
-            mSelectGroup.setVisibility(View.VISIBLE);
-        }
         mChatEditText.addTextChangedListener(mChatEditTextListener);
         mChatMsgSendBtn.setOnClickListener(mChatSendBtnListener);
         mChatMsgSendPhotoBtn.setOnClickListener(mChatMsgSendPhotoBtnListener);
+        if (GroupHelper.getAccessLevel(FirebaseHelper.getAuthId(), mGroupKey) != -1) {
+            mAccessRestrict.setVisibility(View.GONE);
+            FirebaseHelper.getRoot().child(FirebaseHelper.GROUP_CONVERSATION).child(mConversationKey).orderByChild("timestamp").startAt()
+                    .limitToLast(40).addChildEventListener(mChatMessageListener);
+        } else {
+            disableViews();
+            mChatProgress.setVisibility(View.GONE);
+            mAccessRestrict.setVisibility(View.VISIBLE);
+            mNoMesssages.setVisibility(View.GONE);
+        }
+        FirebaseHelper.getRoot().child(FirebaseHelper.GROUP_CONVERSATION).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if(!dataSnapshot.child(mConversationKey).exists()){
+                    mNoMesssages.setVisibility(View.VISIBLE);
+                    mChatProgress.setVisibility(View.GONE);
+                }
+                FirebaseHelper.getRoot().child(FirebaseHelper.GROUP_CONVERSATION).removeEventListener(this);
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+                FirebaseHelper.getRoot().child(FirebaseHelper.GROUP_CONVERSATION).removeEventListener(this);
+            }
+        });
         return view;
     }
 
@@ -233,9 +238,9 @@ public class GroupConversationFragment extends Fragment implements GroupListAdap
         mChatMsgSendBtn = (ImageButton) view.findViewById(R.id.group_chat_msg_send_btn);
         mChatMsgSendPhotoBtn = (ImageButton) view.findViewById(R.id.group_chat_msg_photo_btn);
         mRecyclerView = (RecyclerView) view.findViewById(R.id.group_chat_recyclerview);
-        mSelectGroup = (TextView) view.findViewById(R.id.select_group);
         mAccessRestrict = (TextView) view.findViewById(R.id.access_restrict);
         mChatProgress = (LinearLayout) view.findViewById(R.id.group_chat_progress);
+        mNoMesssages = (TextView) view.findViewById(R.id.no_message);
     }
 
     private void beginCrop(Uri source) {
@@ -245,7 +250,7 @@ public class GroupConversationFragment extends Fragment implements GroupListAdap
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+        Log.d(TAG,"ConversationFragment onActivityResult");
         if (requestCode == Crop.REQUEST_PICK && resultCode == Activity.RESULT_OK) {
             beginCrop(data.getData());
 
@@ -253,9 +258,10 @@ public class GroupConversationFragment extends Fragment implements GroupListAdap
             //the image has been cropped and ready to upload
             SnackbarHelper.create(mRecyclerView, "Uploading Image").setDuration(Snackbar.LENGTH_INDEFINITE).show();
             new ImageUploadTask().execute();
-        } else if (resultCode == Activity.RESULT_CANCELED) {
+        } else{
             enableViews();
         }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
@@ -273,10 +279,11 @@ public class GroupConversationFragment extends Fragment implements GroupListAdap
     }
 
     @Override
-    public void onGroupChange() {
-        mChatProgress.setVisibility(View.VISIBLE);
-        mSelectGroup.setVisibility(View.GONE);
-        updateListeners(GroupHelper.getCurrentGroup());
+    public void onDestroyView() {
+        FirebaseHelper.getRoot().child(FirebaseHelper.GROUP_CONVERSATION).child(mConversationKey).orderByChild("timestamp").startAt()
+                .limitToLast(40).removeEventListener(mChatMessageListener);
+        super.onDestroyView();
+
     }
 
     public interface OnFragmentInteractionListener {
@@ -311,7 +318,7 @@ public class GroupConversationFragment extends Fragment implements GroupListAdap
             Message message = new Message();
             message.setImageUrl(s);
             message.setSender(FirebaseHelper.getAuthId());
-            GroupHelper.sendMessage(GroupHelper.getCurrentGroup(), message, new Firebase.CompletionListener() {
+            GroupHelper.sendMessage(mConversationKey, message, new Firebase.CompletionListener() {
                 @Override
                 public void onComplete(FirebaseError firebaseError, Firebase firebase) {
                     if (firebaseError == null) {
@@ -329,16 +336,9 @@ public class GroupConversationFragment extends Fragment implements GroupListAdap
         protected synchronized Integer doInBackground(DataSnapshot... params) {
             Message message = params[0].getValue(Message.class);
             message.setPush_key(params[0].getKey());
-            Log.d(TAG, "doInBackground");
-            if(mMessages.size()==0){
-                mMessages.add(message);
-                return mMessages.indexOf(message);
-            }
-            if(mMessages.size()!=0 && !mMessages.get(mMessages.size()-1).getPush_key().equals(message.getPush_key())) {
-                mMessages.add(message);
-                return mMessages.indexOf(message);
-            }
-            return null;
+            mMessages.add(message);
+            return mMessages.indexOf(message);
+
         }
 
         @Override
@@ -346,7 +346,8 @@ public class GroupConversationFragment extends Fragment implements GroupListAdap
             super.onPostExecute(integer);
             enableViews();
             mChatProgress.setVisibility(View.GONE);
-            if(integer != null) {
+            mNoMesssages.setVisibility(View.GONE);
+            if (integer != null) {
                 if (mSendClicked)
                     mChatAdapter.notifyItemInserted(integer);
                 else
