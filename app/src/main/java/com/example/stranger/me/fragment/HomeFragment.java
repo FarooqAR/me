@@ -14,7 +14,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.stranger.me.R;
-import com.example.stranger.me.adapter.GroupListAdapter;
 import com.example.stranger.me.adapter.PostAdapter;
 import com.example.stranger.me.helper.FirebaseHelper;
 import com.example.stranger.me.modal.Post;
@@ -26,7 +25,7 @@ import com.firebase.client.FirebaseError;
 import java.util.ArrayList;
 
 
-public class HomeFragment extends Fragment implements GroupListAdapter.OnGroupChangeListener{
+public class HomeFragment extends Fragment{
     private static final String USER_ID = "user_id";
     private static final String POST_COUNT = "post_count";
     private static final String START_KEY = "start_key";
@@ -207,11 +206,6 @@ public class HomeFragment extends Fragment implements GroupListAdapter.OnGroupCh
         LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(layoutManager);
         mAdapter = new PostAdapter(posts);
-    }
-
-    @Override
-    public void onGroupChange() {
-
     }
 
 
