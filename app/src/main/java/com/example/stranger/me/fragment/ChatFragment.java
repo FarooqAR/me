@@ -187,8 +187,26 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
     private ChildEventListener mChatMessageListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-            FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(ChatHelper.getConversationKey(mCurrentUser))
-                    .child(dataSnapshot.getKey()).child("seen").setValue(true);
+            String sender = String.valueOf(dataSnapshot.child("sender").getValue());
+            final String pushKey = dataSnapshot.getKey();
+            if(!sender.equals(FirebaseHelper.getAuthId())) {
+                FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(ChatHelper.getConversationKey(mCurrentUser)).addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.child(pushKey).exists()){
+                            FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(ChatHelper.getConversationKey(mCurrentUser))
+                                    .child(pushKey).child("seen").setValue(true);
+                        }
+                        FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(ChatHelper.getConversationKey(mCurrentUser)).removeEventListener(this);
+                    }
+
+                    @Override
+                    public void onCancelled(FirebaseError firebaseError) {
+                        FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(ChatHelper.getConversationKey(mCurrentUser)).removeEventListener(this);
+                    }
+                });
+
+            }
             new AddMessageToList().execute(dataSnapshot);
         }
 
@@ -199,7 +217,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
 
         @Override
         public void onChildRemoved(DataSnapshot dataSnapshot) {
-
+            new RemoveMessageFromList().execute(dataSnapshot);
         }
 
         @Override
@@ -338,6 +356,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
             mCurrentUser = savedInstanceState.getString(CURRENT_USER);
             mPreviousKey = savedInstanceState.getString(PREVIOUS_KEY);
         }
+        FirebaseHelper.getRoot().child(FirebaseHelper.USERS_KEY).child(FirebaseHelper.getAuthId()).child("online").setValue(true);
         mUsers = new ArrayList<>();
         mMessages = new ArrayList<>();
 
@@ -353,8 +372,6 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
         mChatFriendListAdapter = new ChatFriendListAdapter(getActivity(), R.layout.chat_friends_list_item, mUsers);
         if (getArguments() != null) {
             mCurrentUser = getArguments().getString(CURRENT_USER);
-            if (ChatService.getInstance() != null)
-                new ResetSeen().execute(ChatHelper.getConversationKey(mCurrentUser));
         }
     }
 
@@ -382,24 +399,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
         mFriendsListView.setOnItemClickListener(mFriendsListItemClickListener);
         FirebaseHelper.getRoot().child(FirebaseHelper.USERS_KEY).addChildEventListener(mUsersDataChangeListener);
         FirebaseHelper.getRoot().child(FirebaseHelper.FRIENDS_KEY).child(FirebaseHelper.getAuthId()).addChildEventListener(mFriendsListener);
-        if (mCurrentUser != null) {
-            Integer i = null;
-            try {
 
-                i = new GetIndexTask().execute(mCurrentUser).get();
-                if (i != null) {
-                    mFriendsListView.setItemChecked(i, true);
-                    mChatMsgEditText.setHint("Send Message to " + mUsers.get(i).getFirstName());
-                }
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-            }
-
-            updateChatMessageListener();
-        } else {
-            mFriendsListView.setItemChecked(0, true);
-
-        }
 
         mChatMsgSendBtn.setOnClickListener(mChatSendBtnListener);
         mChatMsgImageBtn.setOnClickListener(mChatImageBtnListener);
@@ -442,10 +442,9 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
 
 
     }
+
     public void updateChatMessageListener() {
         if (mCurrentUser != null && ChatHelper.getConversationKey(mCurrentUser) != null) {
-            String conversationKey = ChatHelper.getConversationKey(mCurrentUser);
-            new ResetSeen().execute(conversationKey);
             removeListeners();
             addListeners();
 
@@ -470,6 +469,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
 
     @Override
     public void onPause() {
+        removeListeners();
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
             mGoogleApiClient.disconnect();
         }
@@ -579,6 +579,24 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
 
     @Override
     public void onResume() {
+        if (mCurrentUser != null) {
+            Integer i = null;
+            try {
+
+                i = new GetIndexTask().execute(mCurrentUser).get();
+                if (i != null) {
+                    mFriendsListView.setItemChecked(i, true);
+                    mChatMsgEditText.setHint("Send Message to " + mUsers.get(i).getFirstName());
+                }
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+
+            updateChatMessageListener();
+        } else {
+            mFriendsListView.setItemChecked(0, true);
+
+        }
         super.onResume();
 
     }
@@ -728,6 +746,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
         protected synchronized Integer doInBackground(DataSnapshot... params) {
             Message message = params[0].getValue(Message.class);
             message.setPush_key(params[0].getKey());
+
             //it's surely a bad design to check for every message by looping through entire array which can be as big as....100 messages .it will
             //take a while to show a single message, it is just to ensure that a message is not shown twice or more
             for (int i=0;i<mMessages.size();i++){
@@ -760,6 +779,30 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
         }
     }
 
+    private class RemoveMessageFromList extends AsyncTask<DataSnapshot, Void, Integer> {
+        @Override
+        protected synchronized Integer doInBackground(DataSnapshot... params) {
+            Message message = params[0].getValue(Message.class);
+            message.setPush_key(params[0].getKey());
+            for (int i=0;i<mMessages.size();i++){
+                if(mMessages.get(i).getPush_key().equals(message.getPush_key())) {
+                    mMessages.remove(i);
+                    return i;
+                }
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Integer integer) {
+            super.onPostExecute(integer);
+            if (integer != null) {
+                mChatAdapter.notifyItemRemoved(integer);
+
+            }
+        }
+    }
 
     private class GetIndexTask extends AsyncTask<String, Void, Integer> {
 
@@ -818,10 +861,27 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
     private class ResetSeen extends AsyncTask<String, Void, Void> {
         @Override
         protected Void doInBackground(String... strings) {
+            final String key = strings[0];
             for (int i = 0; i < mMessages.size(); i++) {
-                if (!mMessages.get(i).getSender().equals(FirebaseHelper.getAuthId()))
-                    FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(strings[0])
-                            .child(mMessages.get(i).getPush_key()).child("seen").setValue(true);
+                final Message current = mMessages.get(i);
+                if (!current.getSender().equals(FirebaseHelper.getAuthId())) {
+
+                    FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(key).addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.child(current.getPush_key()).exists())
+                                FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(key).child(current.getPush_key()).child("seen").setValue(true);
+                            FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(key).removeEventListener(this);
+                        }
+
+                        @Override
+                        public void onCancelled(FirebaseError firebaseError) {
+
+                            FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(key).removeEventListener(this);
+                        }
+                    });
+
+                }
             }
             if (ChatService.getInstance() != null) {//service may have not yet started
                 ChatService.getInstance().removeNotificationsFor(strings[0]);
