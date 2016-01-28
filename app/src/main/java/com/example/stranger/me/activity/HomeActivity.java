@@ -27,7 +27,7 @@ import com.example.stranger.me.R;
 import com.example.stranger.me.adapter.NavDrawerListAdapter;
 import com.example.stranger.me.fragment.ChatFragment;
 import com.example.stranger.me.fragment.FindContactFragment;
-import com.example.stranger.me.fragment.GroupsFragment;
+import com.example.stranger.me.fragment.GroupListFragment;
 import com.example.stranger.me.fragment.HomeFragment;
 import com.example.stranger.me.fragment.MusicFragment;
 import com.example.stranger.me.fragment.ProfileFragment;
@@ -43,7 +43,6 @@ import com.example.stranger.me.widget.CircleImageView;
 import com.example.stranger.me.widget.RobotoTextView;
 import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
-import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 import com.squareup.picasso.Picasso;
@@ -75,7 +74,7 @@ public class HomeActivity extends AppCompatActivity {
         }
     };
     private Fragment[] mFragments = {HomeFragment.newInstance(), ProfileFragment.newInstance(), MusicFragment.newInstance(),
-            GroupsFragment.newInstance(), ChatFragment.newInstance(), FindContactFragment.newInstance(),
+            GroupListFragment.newInstance(), ChatFragment.newInstance(), FindContactFragment.newInstance(),
             SettingsFragment.newInstance()};
     private String[] mFragmentTags = {"Home", "Profile", "My Music", "Groups", "Chat", "Find Contacts", "Settings"};
     private CircleImageView mProfileImage;
@@ -87,6 +86,7 @@ public class HomeActivity extends AppCompatActivity {
             setFragment(mFragments.length-1);
         }
     };
+    private boolean refreshed;
 
     public boolean isVisible() {
         return isVisible;
@@ -107,10 +107,9 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-        Firebase.setAndroidContext(this);
 
         //set online status to true
-        FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("online").setValue(true);
+        FirebaseHelper.getRoot().child(FirebaseHelper.USERS_KEY).child(FirebaseHelper.getAuthId()).child("online").setValue(true);
         init();
         mFragmentManager = getSupportFragmentManager();
         if (!isMyServiceRunning(ChatService.class)) {
@@ -139,7 +138,7 @@ public class HomeActivity extends AppCompatActivity {
 
         ArrayList<Request> friendRequests = new ArrayList<Request>();
         FirebaseHelper.setFriendRequests(friendRequests);
-        FirebaseHelper.getRoot().child("users").startAt().orderByChild("online").addValueEventListener(new ValueEventListener() {
+        FirebaseHelper.getRoot().child(FirebaseHelper.USERS_KEY).startAt().orderByChild("online").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 FirebaseHelper.setUsers(dataSnapshot);
@@ -150,7 +149,7 @@ public class HomeActivity extends AppCompatActivity {
 
             }
         });
-        FirebaseHelper.getRoot().child("groups").addValueEventListener(new ValueEventListener() {
+        FirebaseHelper.getRoot().child(FirebaseHelper.GROUPS).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 GroupHelper.setGROUPS(dataSnapshot);
@@ -161,7 +160,7 @@ public class HomeActivity extends AppCompatActivity {
 
             }
         });
-        FirebaseHelper.getRoot().child("friends").child(FirebaseHelper.getAuthId()).addChildEventListener(new ChildEventListener() {
+        FirebaseHelper.getRoot().child(FirebaseHelper.FRIENDS_KEY).child(FirebaseHelper.getAuthId()).addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 Friend friend = dataSnapshot.getValue(Friend.class);
@@ -201,7 +200,7 @@ public class HomeActivity extends AppCompatActivity {
 
             }
         });
-        FirebaseHelper.getRoot().child("friends").addValueEventListener(new ValueEventListener() {
+        FirebaseHelper.getRoot().child(FirebaseHelper.FRIENDS_KEY).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 FirebaseHelper.setFRIENDS(dataSnapshot);
@@ -213,7 +212,7 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
         if (ChatHelper.getPrivateChatNode() == null)
-            FirebaseHelper.getRoot().child("private_chat").addValueEventListener(mPrivateChatListener);
+            FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CHAT).addValueEventListener(mPrivateChatListener);
         FirebaseHelper.getRoot().child(FirebaseHelper.FRIEND_REQUESTS_KEY).child(FirebaseHelper.getAuthId()).addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -242,10 +241,14 @@ public class HomeActivity extends AppCompatActivity {
 
             }
         });
-        FirebaseHelper.getRoot().child("group_members").addValueEventListener(new ValueEventListener() {
+        FirebaseHelper.getRoot().child(FirebaseHelper.GROUP_MEMBERS).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 GroupHelper.setMEMBERS(dataSnapshot);
+                GroupListFragment frag = (GroupListFragment) mFragments[3];
+                if (!refreshed)
+                    frag.refresh();
+                refreshed = true;
             }
 
             @Override
@@ -253,7 +256,7 @@ public class HomeActivity extends AppCompatActivity {
 
             }
         });
-        FirebaseHelper.getRoot().child("group_requests").addValueEventListener(new ValueEventListener() {
+        FirebaseHelper.getRoot().child(FirebaseHelper.GROUP_REQUESTS).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 GroupHelper.setGroupRequests(dataSnapshot);
