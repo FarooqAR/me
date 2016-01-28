@@ -1,9 +1,11 @@
 package com.example.stranger.me.adapter;
 
+import android.app.ActivityOptions;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.support.v4.view.ViewPager;
+import android.content.Intent;
+import android.os.Bundle;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -15,7 +17,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.stranger.me.R;
-import com.example.stranger.me.activity.HomeActivity;
+import com.example.stranger.me.activity.GroupActivity;
 import com.example.stranger.me.helper.FirebaseHelper;
 import com.example.stranger.me.helper.GroupHelper;
 import com.example.stranger.me.modal.Group;
@@ -24,7 +26,6 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * Created by Farooq on 1/19/2016.
@@ -32,22 +33,9 @@ import java.util.Arrays;
 public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.ViewHolder> {
     public static Context mContext;
     private ArrayList<Group> mGroups;
-    private ViewPager mParentViewPager;
-    private PagerAdapter mParentViewPagerAdapter;
-    private OnGroupChangeListener[] listeners;
-    private HomeActivity mReference;
-    public void setParentViewPager(ViewPager viewPager){
-        mParentViewPager = viewPager;
-        mParentViewPagerAdapter = (PagerAdapter) viewPager.getAdapter();
-        listeners = Arrays.copyOf(mParentViewPagerAdapter.getFragments(),
-                mParentViewPagerAdapter.getFragments().length,
-                OnGroupChangeListener[].class);
-    }
     public GroupListAdapter(Context context, ArrayList<Group> mGroups) {
         mContext = context;
         this.mGroups = mGroups;
-        mReference = (HomeActivity) context;
-
     }
 
     @Override
@@ -64,11 +52,14 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.View
         holder.desc.setText(group.getDescription());
         final String group_key = group.getKey();
         long accessLevel = GroupHelper.getAccessLevel(FirebaseHelper.getAuthId(), group_key);
+        long membersCount = GroupHelper.getMEMBERS().child(group_key).getChildrenCount();
+        holder.see_members.setText("Members("+membersCount+")");
         switch ((int) accessLevel){
             case 0:
             case 1:
             case 2:
                 holder.enableLeaveGroup();
+                holder.see_chat.setVisibility(View.VISIBLE);
                 holder.leave_group.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -78,6 +69,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.View
                 break;
             case 3:
                 holder.enableDeleteGroup();
+                holder.see_chat.setVisibility(View.VISIBLE);
                 holder.delete_group.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -86,6 +78,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.View
                 });
                 break;
             default:
+                holder.see_chat.setVisibility(View.GONE);
                 if(GroupHelper.isRequested(FirebaseHelper.getAuthId(),group_key)){
                     holder.enableRequestSent();
                 }
@@ -108,45 +101,38 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.View
                     });
                 }
         }
-        holder.see_posts.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mParentViewPager.setCurrentItem(1);
-                setToolbarText(group.getName());
-                GroupHelper.setPreviousGroup(GroupHelper.getCurrentGroup());
-                GroupHelper.setCurrentGroup(group_key);
-                callGroupChangeOnListeners();
-            }
-        });
+
         holder.see_chat.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mParentViewPager.setCurrentItem(0);
-                setToolbarText(group.getName());
-                GroupHelper.setPreviousGroup(GroupHelper.getCurrentGroup());
-                GroupHelper.setCurrentGroup(group_key);
-                callGroupChangeOnListeners();
+                openGroup(group,0);
             }
         });
         holder.see_members.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mParentViewPager.setCurrentItem(2);
-                setToolbarText(group.getName());
-                GroupHelper.setPreviousGroup(GroupHelper.getCurrentGroup());
-                GroupHelper.setCurrentGroup(group_key);
-                callGroupChangeOnListeners();
+                openGroup(group,1);
             }
         });
     }
-    public void callGroupChangeOnListeners(){
 
-        for (OnGroupChangeListener listener : listeners) {
-            listener.onGroupChange();
+    public void openGroup(Group group,int position){
+        Intent i = new Intent(mContext, GroupActivity.class);
+        i.putExtra(GroupActivity.GROUP_NAME,group.getName());
+        i.putExtra(GroupActivity.GROUP_CONVERSATION,group.getConversation());
+        i.putExtra(GroupActivity.GROUP_KEY,group.getKey());
+        i.putExtra(GroupActivity.CURRENT_INDEX,position);
+        Bundle animBundle = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
+            animBundle = ActivityOptions.makeCustomAnimation(mContext,
+                    R.anim.slide_in_left,
+                    R.anim.slide_out_left
+            ).toBundle();
+            mContext.startActivity(i,animBundle);
         }
-    }
-    public void setToolbarText(String groupName){
-        mReference.getSupportActionBar().setTitle(groupName);
+        else{
+            mContext.startActivity(i);
+        }
     }
     @Override
     public int getItemCount() {
@@ -160,7 +146,6 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.View
         Button delete_group;//only member of accesslevel 3 can see this
         Button join_group;
         Button leave_group;
-        Button see_posts;
         Button see_chat;
         Button see_members;
         ProgressBar join_group_progress;
@@ -173,7 +158,6 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.View
             join_group = (Button) itemView.findViewById(R.id.action_join_group);
             leave_group = (Button) itemView.findViewById(R.id.action_leave_group);
             see_chat = (Button) itemView.findViewById(R.id.action_see_group_chat);
-            see_posts = (Button) itemView.findViewById(R.id.action_see_group_posts);
             see_members= (Button) itemView.findViewById(R.id.action_see_group_members);
             join_group_progress = (ProgressBar) itemView.findViewById(R.id.action_join_group_progress);
             leave_group_progress= (ProgressBar) itemView.findViewById(R.id.action_leave_group_progress);
@@ -221,20 +205,17 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.View
             delete_group.setEnabled(false);
             delete_group_progress.setVisibility(View.VISIBLE);
             see_chat.setEnabled(false);
-            see_posts.setEnabled(false);
 
         }
         public void hideDeleteGroupProgress(){
             delete_group.setEnabled(true);
             see_chat.setEnabled(true);
-            see_posts.setEnabled(true);
             see_members.setEnabled(true);
             delete_group_progress.setVisibility(View.GONE);
         }
         public void showLeaveGroupProgress(){
             leave_group_progress.setVisibility(View.VISIBLE);
             see_chat.setEnabled(false);
-            see_posts.setEnabled(false);
             see_members.setEnabled(false);
             leave_group.setEnabled(false);
         }
@@ -242,14 +223,12 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.View
             leave_group_progress.setVisibility(View.GONE);
             leave_group.setEnabled(true);
             see_chat.setEnabled(true);
-            see_posts.setEnabled(true);
             see_members.setEnabled(true);
         }
         public void showJoinGroupProgress(){
             join_group_progress.setVisibility(View.VISIBLE);
             join_group.setEnabled(false);
             see_chat.setEnabled(false);
-            see_posts.setEnabled(false);
             see_members.setEnabled(false);
 
         }
@@ -257,7 +236,6 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.View
             join_group_progress.setVisibility(View.GONE);
             join_group.setEnabled(true);
             see_chat.setEnabled(true);
-            see_posts.setEnabled(true);
             see_members.setEnabled(true);
         }
         public void showDeleteGroupPopup(final int position,View v, final String group_key) {
@@ -290,8 +268,6 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.View
                                     if(firebaseError==null) {
                                         enableJoinGroup();
                                         hideDeleteGroupProgress();
-                                        mGroups.remove(position);
-                                        GroupListAdapter.this.notifyItemRemoved(position);
                                     }
                                 }
                             });
@@ -331,8 +307,5 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.View
             });
             menu.show();
         }
-    }
-    public interface OnGroupChangeListener{
-        void onGroupChange();
     }
 }
