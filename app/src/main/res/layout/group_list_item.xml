@@ -43,14 +43,6 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
                 <Button
-                    android:id="@+id/action_see_group_posts"
-                    style="@style/Base.Widget.AppCompat.Toolbar.Button.Navigation"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Posts"
-                    android:textAllCaps="false"
-                    android:textColor="#8a000000" />
-                <Button
                     android:id="@+id/action_see_group_chat"
                     style="@style/Base.Widget.AppCompat.Toolbar.Button.Navigation"
                     android:layout_width="wrap_content"
