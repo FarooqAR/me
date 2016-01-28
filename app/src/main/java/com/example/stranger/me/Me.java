@@ -4,6 +4,8 @@ import android.content.Context;
 import android.support.multidex.MultiDex;
 import android.support.multidex.MultiDexApplication;
 
+import com.firebase.client.Firebase;
+
 /**
  * Created by Farooq on 1/24/2016.
  */
@@ -12,6 +14,7 @@ public class Me extends MultiDexApplication {
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
         MultiDex.install(this);
+        Firebase.setAndroidContext(this);
     }
 
 }
