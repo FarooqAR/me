@@ -69,10 +69,6 @@ public class GroupMembersAdapter extends RecyclerView.Adapter<GroupMembersAdapte
                         @Override
                         public void onComplete(FirebaseError firebaseError, Firebase firebase) {
                             holder.remove.setEnabled(true);
-                            if(firebaseError==null){
-                                members.remove(position);
-                                GroupMembersAdapter.this.notifyItemRemoved(position);
-                            }
                         }
                     });
                 }
