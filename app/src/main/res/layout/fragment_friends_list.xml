@@ -1,17 +1,79 @@
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#a21"
     tools:context="com.example.stranger.me.fragment.FriendsListFragment">
 
-    <LinearLayout
+    <android.support.v7.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-    </LinearLayout>
-
-
-</ScrollView>
+        android:id="@+id/find_friend_edittext_container">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:orientation="horizontal">
+            <com.example.stranger.me.widget.RobotoEditText
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="20"
+                android:singleLine="true"
+                android:id="@+id/find_friend_edittext"
+                android:textColor="#8a000000"
+                android:textColorHint="#8a000000"
+                android:drawablePadding="10dp"
+                android:drawableStart="@drawable/ic_search_gray_24dp"
+                android:hint="Search Friends"
+                android:textStyle="normal"
+                android:drawableLeft="@drawable/ic_search_gray_24dp"/>
+            <ImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:id="@+id/action_find_friend"
+                android:src="@drawable/ic_search_gray_24dp"/>
+            <ImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/action_refresh_friends"
+                android:src="@drawable/ic_refresh_gray_24dp"
+                android:padding="10dp"
+                style="@style/Base.Widget.AppCompat.Toolbar.Button.Navigation"
+                android:textAllCaps="false"/>
+        </LinearLayout>
+    </android.support.v7.widget.CardView>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/find_friend_edittext_container"
+        android:id="@+id/friends_count"
+        android:textColor="#9a000000"
+        android:text="12 Friends"/>
+    <android.support.v7.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/friends_count"
+        android:id="@+id/find_friend_recyclerview"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:id="@+id/no_friend"
+        android:text="No such friend found"
+        android:textColor="#9a000000"
+        android:visibility="gone"/>
+    <ProgressBar
+        android:id="@+id/find_friend_progress"
+        style="@android:style/Widget.DeviceDefault.ProgressBar.Large"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/find_contact_btn"
+        android:layout_centerInParent="true"
+        android:visibility="gone"
+        android:text="Find a Contact"/>
+</RelativeLayout>
