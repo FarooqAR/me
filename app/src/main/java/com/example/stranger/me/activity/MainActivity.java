@@ -61,13 +61,10 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
         @Override
         public void onAuthStateChanged(AuthData authData) {
 
-            if (authData == null) {
+            if (authData == null || FirebaseHelper.getAuthId() == null) {
                 animateSplash(0, 500);
                 FirebaseHelper.getRoot().removeAuthStateListener(mAuthStateListener);
-            } else {
-                animateSplash(15000, 500);
-
-
+            } else if (FirebaseHelper.getAuthId() != null){
                 final Intent i = new Intent(MainActivity.this, HomeActivity.class);
                 if (getIntent() != null && getIntent().getStringExtra(HomeActivity.FRIEND_ID) != null) {
                     i.putExtra(HomeActivity.FRIEND_ID, getIntent().getStringExtra(HomeActivity.FRIEND_ID));
@@ -78,10 +75,12 @@ public class MainActivity extends AppCompatActivity implements SignUpFragmentScr
                         ChatHelper.setPrivateChatNode(dataSnapshot);
                         startActivity(i);
                         finish();
+                        animateSplash(1000, 500);
                     }
 
                     @Override
                     public void onCancelled(FirebaseError firebaseError) {
+                        animateSplash(0, 500);
                         SnackbarHelper.create(mRoot,"There is a problem in connection").show();
                     }
                 });

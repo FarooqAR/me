@@ -83,6 +83,7 @@ public class HomeActivity extends AppCompatActivity {
     private View.OnClickListener mNavHeaderAboutListener=new View.OnClickListener() {
         @Override
         public void onClick(View view) {
+            mDrawerLayout.closeDrawers();
             setFragment(mFragments.length-1);
         }
     };
@@ -107,7 +108,8 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-
+        if(FirebaseHelper.getAuthId() == null)
+            finish();
         //set online status to true
         FirebaseHelper.getRoot().child(FirebaseHelper.USERS_KEY).child(FirebaseHelper.getAuthId()).child("online").setValue(true);
         init();
@@ -119,6 +121,7 @@ public class HomeActivity extends AppCompatActivity {
         String currentUserFromNotification = null;
         if (getIntent() != null) {
             currentUserFromNotification = getIntent().getStringExtra(FRIEND_ID);
+            FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("online").setValue(true);
         }
 
         mIndex = 3;
@@ -335,8 +338,8 @@ public class HomeActivity extends AppCompatActivity {
         FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("about").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                String value = String.valueOf(dataSnapshot.getValue());
-                if(value.length()>0) {
+                if(dataSnapshot.getValue()!=null) {
+                    String value = String.valueOf(dataSnapshot.getValue());
                     mNavHeaderAbout.setText("" + value);
                     mNavHeaderAbout.setOnClickListener(null);
                 }

@@ -381,7 +381,9 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_chat, container, false);
         init(view);
-
+        if(mCurrentUser!=null){
+            new ResetSeen().execute(ChatHelper.getConversationKey(mCurrentUser));
+        }
         mMessages.clear();
 
         mChatAdapter = new ChatAdapter(getActivity(), mMessages);
@@ -428,10 +430,9 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
     public void removeListeners(){
         String conversationKey = ChatHelper.getConversationKey(mCurrentUser);
         if (mPreviousKey != null)
-            FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(mPreviousKey)
-                    .orderByChild("timestamp").limitToLast(30).removeEventListener(mChatMessageListener);
-        FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(conversationKey)
-                .orderByChild("timestamp").limitToLast(30).removeEventListener(mChatMessageListener);
+            FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(mPreviousKey).removeEventListener(mChatMessageListener);
+        if(conversationKey!=null)
+        FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(conversationKey).removeEventListener(mChatMessageListener);
 
     }
 
@@ -447,7 +448,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
         if (mCurrentUser != null && ChatHelper.getConversationKey(mCurrentUser) != null) {
             removeListeners();
             addListeners();
-
+            Log.d(TAG,"previousKey="+mPreviousKey+"    currentKey="+ChatHelper.getConversationKey(mCurrentUser));
             FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {

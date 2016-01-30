@@ -166,13 +166,33 @@ public class ChatService extends Service {
 
         @Override
         protected synchronized Void doInBackground(Conversation... cons) {
-            Conversation c = cons[0];
-            for (String pushKey : c.getPushKeys()) {
+            final Conversation c = cons[0];
+            for (final String pushKey : c.getPushKeys()) {
                 FirebaseHelper.getRoot()
                         .child("private_conversation")
-                        .child(c.getConversationKey())
-                        .child(pushKey)
-                        .child("seen").setValue(true);
+                        .child(c.getConversationKey()).addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.child(pushKey).exists()) {
+                            FirebaseHelper.getRoot()
+                                    .child("private_conversation")
+                                    .child(c.getConversationKey())
+                                    .child(pushKey)
+                                    .child("seen").setValue(true);
+                        }
+                        FirebaseHelper.getRoot()
+                                .child("private_conversation")
+                                .child(c.getConversationKey()).removeEventListener(this);
+                    }
+
+                    @Override
+                    public void onCancelled(FirebaseError firebaseError) {
+                        FirebaseHelper.getRoot()
+                                .child("private_conversation")
+                                .child(c.getConversationKey()).removeEventListener(this);
+                    }
+                });
+
             }
             for (int i = 0; i < mConversations.size(); i++) {
                 if (c.getConversationKey().equals(mConversations.get(i).getConversationKey())) {
