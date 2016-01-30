@@ -274,7 +274,7 @@ public class SettingsFragment extends Fragment {
     }
 
     private void changeFirstName(String firstName) {
-        if (!firstName.equals("")) {
+        if (!firstName.equals("") && FirebaseHelper.getAuthId() != null) {
             if (firstName.length() > 3) {
                 FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("firstName").setValue(firstName);
             } else {
@@ -284,7 +284,7 @@ public class SettingsFragment extends Fragment {
     }
 
     private void changeLastName(String lastName) {
-        if (!lastName.equals("")) {
+        if (!lastName.equals("") && FirebaseHelper.getAuthId() != null) {
             if (lastName.length() > 3) {
                 FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("lastName").setValue(lastName);
             } else {
@@ -294,7 +294,7 @@ public class SettingsFragment extends Fragment {
     }
 
     private void changeAge(int age) {
-        if (age > 0) {
+        if (age > 0 && FirebaseHelper.getAuthId() != null) {
             if (age >= 5 && age <= 100) {
                 FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("age").setValue(age);
             } else {
@@ -304,7 +304,7 @@ public class SettingsFragment extends Fragment {
     }
 
     private void changeCountry(String country) {
-        if (!country.equals("")) {
+        if (!country.equals("") && FirebaseHelper.getAuthId() != null) {
             FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("country").setValue(country);
         }
     }
