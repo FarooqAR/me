@@ -30,8 +30,8 @@ public class FriendsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mFragments = new Fragment[]{FriendsListFragment.newInstance()};
-        mFragmentTitles = new String[]{"Friends"};
+        mFragments = new Fragment[]{FriendsListFragment.newInstance(),FriendRequestsFragment.newInstance()};
+        mFragmentTitles = new String[]{"Friends","Requests"};
         mAdapter = new PagerAdapter(getChildFragmentManager(),mFragments,mFragmentTitles);
     }
 
@@ -42,7 +42,6 @@ public class FriendsFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_friends, container, false);
         init(view);
         mViewPager.setAdapter(mAdapter);
-
         return view;
     }
 

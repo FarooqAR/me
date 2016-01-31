@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:id="@+id/friends_viewpager"
     tools:context="com.example.stranger.me.fragment.FriendsFragment">
-    <android.support.v4.view.PagerTitleStrip
+    <android.support.v4.view.PagerTabStrip
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/friends_viewpager_indicator"/>

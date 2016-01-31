@@ -35,7 +35,7 @@
             <ImageButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/action_refresh_friends"
+                android:id="@+id/action_refresh_friend"
                 android:src="@drawable/ic_refresh_gray_24dp"
                 android:padding="10dp"
                 style="@style/Base.Widget.AppCompat.Toolbar.Button.Navigation"
@@ -46,13 +46,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/find_friend_edittext_container"
-        android:id="@+id/friends_count"
+        android:id="@+id/friend_count"
         android:textColor="#9a000000"
         android:text="12 Friends"/>
     <android.support.v7.widget.RecyclerView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/friends_count"
+        android:layout_below="@+id/friend_count"
         android:id="@+id/find_friend_recyclerview"/>
     <TextView
         android:layout_width="wrap_content"

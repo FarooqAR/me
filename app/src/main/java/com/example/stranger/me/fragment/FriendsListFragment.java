@@ -175,10 +175,10 @@ public class FriendsListFragment extends Fragment {
         mRecyclerView = (RecyclerView) view.findViewById(R.id.find_friend_recyclerview);
         mFindFriend = (RobotoEditText) view.findViewById(R.id.find_friend_edittext);
         mFindFriendBtn = (ImageButton) view.findViewById(R.id.action_find_friend);
-        mRefreshBtn = (ImageButton) view.findViewById(R.id.action_refresh_friends);
+        mRefreshBtn = (ImageButton) view.findViewById(R.id.action_refresh_friend);
         mProgress = (ProgressBar) view.findViewById(R.id.find_friend_progress);
         mNoFriend = (TextView) view.findViewById(R.id.no_friend);
-        mFriendsCount = (TextView) view.findViewById(R.id.friends_count);
+        mFriendsCount = (TextView) view.findViewById(R.id.friend_count);
         mFindContactBtn = (Button) view.findViewById(R.id.find_contact_btn);
     }
 
