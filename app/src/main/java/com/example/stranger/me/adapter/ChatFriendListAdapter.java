@@ -19,9 +19,15 @@ import java.util.List;
 /**
  * Created by Farooq on 1/16/2016.
  */
+/*
+This will be used in friends list in ChatFragment
+*/
 public class ChatFriendListAdapter extends ArrayAdapter<User> {
+
     private ArrayList<User> mUsers;
+
     public Context mContext;
+
     public ChatFriendListAdapter(Context context, int resource, List<User> objects) {
         super(context, resource, objects);
         mUsers = (ArrayList<User>) objects;
@@ -48,8 +54,14 @@ public class ChatFriendListAdapter extends ArrayAdapter<User> {
         ViewHolder holder = new ViewHolder();
         if (convertView == null) {
             convertView = LayoutInflater.from(mContext).inflate(R.layout.chat_friends_list_item, parent, false);
+
+            //a green dot for online
             holder.chat_status = (ImageView) convertView.findViewById(R.id.chat_friend_status);
+
+            //username will be shown in landscape variation
             holder.username = (RobotoTextView) convertView.findViewById(R.id.chat_friend_name);
+
+            //friend's image
             holder.profile_image = (CircleImageView) convertView.findViewById(R.id.chat_friend_icon);
 
             convertView.setTag(holder);
@@ -58,6 +70,7 @@ public class ChatFriendListAdapter extends ArrayAdapter<User> {
             holder = (ViewHolder) convertView.getTag();
         }
         User user = getItem(position);
+
         if(user.isOnline()){
             holder.chat_status.setVisibility(View.VISIBLE);
         }
@@ -65,7 +78,7 @@ public class ChatFriendListAdapter extends ArrayAdapter<User> {
             holder.chat_status.setVisibility(View.INVISIBLE);
         }
         holder.username.setText(user.getFirstName());
-        Picasso.with(mContext).load(user.getProfileImageURL()).into(holder.profile_image);
+        Picasso.with(mContext).load(user.getProfileImageURL()).placeholder(R.drawable.ic_account_circle).into(holder.profile_image);
         return convertView;
     }
     static class ViewHolder {
