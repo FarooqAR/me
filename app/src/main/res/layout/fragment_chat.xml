@@ -127,6 +127,13 @@
                 android:visibility="gone"
                 android:layout_centerInParent="true"
                 android:textColor="#9a000000"/>
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/find_contact_btn"
+                android:text="Find a contact"
+                android:layout_centerInParent="true"
+                android:visibility="gone"/>
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"

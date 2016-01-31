@@ -18,6 +18,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -27,6 +28,7 @@ import android.widget.TextView;
 import com.cloudinary.utils.ObjectUtils;
 import com.example.stranger.me.CustomLinearLayoutManager;
 import com.example.stranger.me.R;
+import com.example.stranger.me.activity.HomeActivity;
 import com.example.stranger.me.adapter.ChatAdapter;
 import com.example.stranger.me.adapter.ChatFriendListAdapter;
 import com.example.stranger.me.helper.ChatHelper;
@@ -58,6 +60,7 @@ import com.soundcloud.android.crop.Crop;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -135,12 +138,13 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
 
         }
     };
+    private Button mFindContactBtn;
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString(CURRENT_USER, mCurrentUser);
-        outState.putString(PREVIOUS_KEY,mPreviousKey);
+        outState.putString(PREVIOUS_KEY, mPreviousKey);
     }
 
     private AdapterView.OnItemClickListener mFriendsListItemClickListener = new AdapterView.OnItemClickListener() {
@@ -189,11 +193,11 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
             String sender = String.valueOf(dataSnapshot.child("sender").getValue());
             final String pushKey = dataSnapshot.getKey();
-            if(!sender.equals(FirebaseHelper.getAuthId())) {
+            if (!sender.equals(FirebaseHelper.getAuthId())) {
                 FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(ChatHelper.getConversationKey(mCurrentUser)).addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.child(pushKey).exists()){
+                        if (dataSnapshot.child(pushKey).exists()) {
                             FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(ChatHelper.getConversationKey(mCurrentUser))
                                     .child(pushKey).child("seen").setValue(true);
                         }
@@ -352,7 +356,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if(savedInstanceState!=null){
+        if (savedInstanceState != null) {
             mCurrentUser = savedInstanceState.getString(CURRENT_USER);
             mPreviousKey = savedInstanceState.getString(PREVIOUS_KEY);
         }
@@ -381,7 +385,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_chat, container, false);
         init(view);
-        if(mCurrentUser!=null){
+        if (mCurrentUser != null) {
             new ResetSeen().execute(ChatHelper.getConversationKey(mCurrentUser));
         }
         mMessages.clear();
@@ -397,12 +401,46 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
             }
         });
 
+        //if the user has no friends this button will be shown and clicking on it will switch fragment to findContact
+        mFindContactBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                HomeActivity activity = (HomeActivity) getActivity();
+                activity.setFragment(activity.getFragmentsSize() - 2);
+            }
+        });
+
+        //listen for changes in chat message edittext and update the ui
         mChatMsgEditText.addTextChangedListener(mChatEditTextListener);
+
+        //listen for item click in friends listview
         mFriendsListView.setOnItemClickListener(mFriendsListItemClickListener);
+
+        //listener on users node to update online status of friends
         FirebaseHelper.getRoot().child(FirebaseHelper.USERS_KEY).addChildEventListener(mUsersDataChangeListener);
+
+        //listener to add friends to list
         FirebaseHelper.getRoot().child(FirebaseHelper.FRIENDS_KEY).child(FirebaseHelper.getAuthId()).addChildEventListener(mFriendsListener);
 
+        //if user has no friends then show mFindContactBtn
+        FirebaseHelper.getRoot().child(FirebaseHelper.FRIENDS_KEY).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (!dataSnapshot.child(FirebaseHelper.getAuthId()).exists()) {
+                    disableViews();
+                    mFindContactBtn.setVisibility(View.VISIBLE);
+                } else {
+                    enableViews();
+                    mFindContactBtn.setVisibility(View.GONE);
+                }
 
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
         mChatMsgSendBtn.setOnClickListener(mChatSendBtnListener);
         mChatMsgImageBtn.setOnClickListener(mChatImageBtnListener);
         mChatMsgMapBtn.setOnClickListener(mChatMapBtnListener);
@@ -427,16 +465,16 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
         return view;
     }
 
-    public void removeListeners(){
+    public void removeListeners() {
         String conversationKey = ChatHelper.getConversationKey(mCurrentUser);
         if (mPreviousKey != null)
             FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(mPreviousKey).removeEventListener(mChatMessageListener);
-        if(conversationKey!=null)
-        FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(conversationKey).removeEventListener(mChatMessageListener);
+        if (conversationKey != null)
+            FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(conversationKey).removeEventListener(mChatMessageListener);
 
     }
 
-    public void addListeners(){
+    public void addListeners() {
         String conversationKey = ChatHelper.getConversationKey(mCurrentUser);
         FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(conversationKey)
                 .orderByChild("timestamp").startAt().limitToLast(30).addChildEventListener(mChatMessageListener);
@@ -448,7 +486,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
         if (mCurrentUser != null && ChatHelper.getConversationKey(mCurrentUser) != null) {
             removeListeners();
             addListeners();
-            Log.d(TAG,"previousKey="+mPreviousKey+"    currentKey="+ChatHelper.getConversationKey(mCurrentUser));
+            Log.d(TAG, "previousKey=" + mPreviousKey + "    currentKey=" + ChatHelper.getConversationKey(mCurrentUser));
             FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
@@ -543,6 +581,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
         mChatMsgMapBtn = (ImageButton) view.findViewById(R.id.chat_msg_map_btn);
         mChatProgress = (RelativeLayout) view.findViewById(R.id.chat_progress);
         mFriendsListProgress = (ProgressBar) view.findViewById(R.id.friends_list_progress);
+        mFindContactBtn = (Button) view.findViewById(R.id.find_contact_btn);
     }
 
     private void hideChatProgress() {
@@ -750,8 +789,8 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
 
             //it's surely a bad design to check for every message by looping through entire array which can be as big as....100 messages .it will
             //take a while to show a single message, it is just to ensure that a message is not shown twice or more
-            for (int i=0;i<mMessages.size();i++){
-                if(mMessages.get(i).getPush_key().equals(message.getPush_key()))
+            for (int i = 0; i < mMessages.size(); i++) {
+                if (mMessages.get(i).getPush_key().equals(message.getPush_key()))
                     return null;
             }
             mMessages.add(message);
@@ -785,8 +824,8 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
         protected synchronized Integer doInBackground(DataSnapshot... params) {
             Message message = params[0].getValue(Message.class);
             message.setPush_key(params[0].getKey());
-            for (int i=0;i<mMessages.size();i++){
-                if(mMessages.get(i).getPush_key().equals(message.getPush_key())) {
+            for (int i = 0; i < mMessages.size(); i++) {
+                if (mMessages.get(i).getPush_key().equals(message.getPush_key())) {
                     mMessages.remove(i);
                     return i;
                 }
@@ -870,8 +909,11 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
                     FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(key).addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
-                            if (dataSnapshot.child(current.getPush_key()).exists())
-                                FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(key).child(current.getPush_key()).child("seen").setValue(true);
+                            if (dataSnapshot.child(current.getPush_key()).exists()) {
+                                Map<String,Object> update = new HashMap<String, Object>();
+                                update.put("seen",true);
+                                FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(key).child(current.getPush_key()).updateChildren(update);
+                            }
                             FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(key).removeEventListener(this);
                         }
 
