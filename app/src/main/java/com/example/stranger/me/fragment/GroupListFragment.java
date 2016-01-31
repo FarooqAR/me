@@ -177,6 +177,7 @@ public class GroupListFragment extends Fragment {
         mRecyclerView.setLayoutManager(new CustomLinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
         mRecyclerView.setAdapter(mAdapter);
         mRefreshBtn.setOnClickListener(mRefreshBtnListener);
+        refresh();
         return view;
     }
 
