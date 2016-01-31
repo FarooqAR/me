@@ -62,7 +62,7 @@ public class ProfileFragment extends Fragment {
         }
         mFragments = new Fragment[3];
         mFragments[0] = HomeFragment.newInstance(mUserId);
-        mFragments[1] = FriendsListFragment.newInstance(mUserId);
+        mFragments[1] = FriendsListFragment.newInstance();
         mFragments[2] = ImagesFragment.newInstance(mUserId);
         mAdapter = new PagerAdapter(getChildFragmentManager(), mFragments, mFragmentTitles);
 
