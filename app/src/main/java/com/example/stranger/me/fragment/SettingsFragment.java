@@ -26,6 +26,7 @@ import com.example.stranger.me.R;
 import com.example.stranger.me.activity.AvatarActivity;
 import com.example.stranger.me.helper.CloudinaryHelper;
 import com.example.stranger.me.helper.FirebaseHelper;
+import com.example.stranger.me.helper.InputHelper;
 import com.example.stranger.me.helper.SnackbarHelper;
 import com.example.stranger.me.modal.User;
 import com.example.stranger.me.widget.CircleImageView;
@@ -398,33 +399,37 @@ public class SettingsFragment extends Fragment {
     }
 
     private void changePassword(String email, String old_pass, String newPass) {
-        disablePassBtn();
-        FirebaseHelper.getRoot().changePassword(email, old_pass, newPass, new Firebase.ResultHandler() {
-            @Override
-            public void onSuccess() {
-                enablePassBtn();
-            }
+        if(InputHelper.isPasswordValid(mRootView,newPass)) {
+            disablePassBtn();
+            FirebaseHelper.getRoot().changePassword(email, old_pass, newPass, new Firebase.ResultHandler() {
+                @Override
+                public void onSuccess() {
+                    enablePassBtn();
+                }
 
-            @Override
-            public void onError(FirebaseError firebaseError) {
-                enablePassBtn();
-            }
-        });
+                @Override
+                public void onError(FirebaseError firebaseError) {
+                    enablePassBtn();
+                }
+            });
+        }
     }
 
     private void changeEmail(String oldEmail, String newEmail, String pass) {
-        disableEmailBtn();
-        FirebaseHelper.getRoot().changeEmail(oldEmail, pass, newEmail, new Firebase.ResultHandler() {
-            @Override
-            public void onSuccess() {
-                enableEmailBtn();
-            }
+        if(InputHelper.isEmailValid(mRootView,newEmail)) {
+            disableEmailBtn();
+            FirebaseHelper.getRoot().changeEmail(oldEmail, pass, newEmail, new Firebase.ResultHandler() {
+                @Override
+                public void onSuccess() {
+                    enableEmailBtn();
+                }
 
-            @Override
-            public void onError(FirebaseError firebaseError) {
-                enableEmailBtn();
-            }
-        });
+                @Override
+                public void onError(FirebaseError firebaseError) {
+                    enableEmailBtn();
+                }
+            });
+        }
     }
 
     public interface OnFragmentInteractionListener {
