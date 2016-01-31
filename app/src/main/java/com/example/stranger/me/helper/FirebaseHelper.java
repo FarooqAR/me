@@ -33,19 +33,10 @@ public class FirebaseHelper {
     public static ArrayList<Request> friendRequests = null;//requests to authenticated user
     public static ArrayList<Friend> friends = null;//friends of authenticated user
     private static DataSnapshot FRIEND_REQUESTS = null;//friend requests node
-    private static DataSnapshot FRIENDS = null;//friend node
 
 
     public static void setFriendRequests(DataSnapshot friendRequests) {
         FRIEND_REQUESTS = friendRequests;
-    }
-
-    public static DataSnapshot getFRIENDS() {
-        return FRIENDS;
-    }
-
-    public static void setFRIENDS(DataSnapshot FRIENDS) {
-        FirebaseHelper.FRIENDS = FRIENDS;
     }
 
     public static ArrayList<Friend> getFriends() {
@@ -309,8 +300,9 @@ public class FirebaseHelper {
         @Override
         protected Void doInBackground(String... params) {
             for (int i = 0; i < friends.size(); i++) {
-                if (friends.get(i).getId().equals(params[0])) {
-                    friends.remove(friends.get(i));
+                Friend friend = friends.get(i);
+                if (friend.getId().equals(params[0])) {
+                    friends.remove(friend);
                 }
             }
             return null;
