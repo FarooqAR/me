@@ -21,9 +21,6 @@ public class InputHelper {
         } else if(pass.length()>16){
             SnackbarHelper.create(v,"Invalid Password: Maximum 16 characters allowed").show();
             return false;
-        } else if (!(pass.matches("^(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9]+$"))){
-            SnackbarHelper.create(v, "Invalid Password: Must contain alphabets & numbers").show();
-            return false;
         }
         return true;
     }
