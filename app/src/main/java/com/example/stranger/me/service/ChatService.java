@@ -21,6 +21,8 @@ import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -174,11 +176,12 @@ public class ChatService extends Service {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if (dataSnapshot.child(pushKey).exists()) {
+                            Map<String,Object> update = new HashMap<>();
+                            update.put("seen",true);
                             FirebaseHelper.getRoot()
                                     .child("private_conversation")
                                     .child(c.getConversationKey())
-                                    .child(pushKey)
-                                    .child("seen").setValue(true);
+                                    .child(pushKey).updateChildren(update);
                         }
                         FirebaseHelper.getRoot()
                                 .child("private_conversation")
