@@ -1,5 +1,6 @@
 # Me – A social Networking App
 ### Project submitted by: Farooq abdul rehman – Roll # 1381
+### Most of the work is in branch "final".. master branch is still incomplete
 ### This app will use the following libraries/sdks:
 
 * 	Firebase – For Database
