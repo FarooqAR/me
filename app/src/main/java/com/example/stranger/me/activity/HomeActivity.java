@@ -27,6 +27,7 @@ import com.example.stranger.me.R;
 import com.example.stranger.me.adapter.NavDrawerListAdapter;
 import com.example.stranger.me.fragment.ChatFragment;
 import com.example.stranger.me.fragment.FindContactFragment;
+import com.example.stranger.me.fragment.FriendsFragment;
 import com.example.stranger.me.fragment.GroupListFragment;
 import com.example.stranger.me.fragment.HomeFragment;
 import com.example.stranger.me.fragment.MusicFragment;
@@ -73,24 +74,28 @@ public class HomeActivity extends AppCompatActivity {
 
         }
     };
+
     private Fragment[] mFragments = {HomeFragment.newInstance(), ProfileFragment.newInstance(), MusicFragment.newInstance(),
-            GroupListFragment.newInstance(), ChatFragment.newInstance(), FindContactFragment.newInstance(),
+            GroupListFragment.newInstance(), ChatFragment.newInstance(), FriendsFragment.newInstance(), FindContactFragment.newInstance(),
             SettingsFragment.newInstance()};
-    private String[] mFragmentTags = {"Home", "Profile", "My Music", "Groups", "Chat", "Find Contacts", "Settings"};
+    private String[] mFragmentTags = {"Home", "Profile", "My Music", "Groups", "Chat", "Friends", "Find Contacts", "Settings"};
     private CircleImageView mProfileImage;
     private RobotoTextView mNavHeaderName;
     private RobotoTextView mNavHeaderAbout;
-    private View.OnClickListener mNavHeaderAboutListener=new View.OnClickListener() {
+    private View.OnClickListener mNavHeaderAboutListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            mDrawerLayout.closeDrawers();
-            setFragment(mFragments.length-1);
+            setFragment(mFragments.length - 1);
         }
     };
     private boolean refreshed;
 
     public boolean isVisible() {
         return isVisible;
+    }
+
+    public int getFragmentsSize() {
+        return mFragments.length;
     }
 
     private boolean isVisible;
@@ -101,6 +106,7 @@ public class HomeActivity extends AppCompatActivity {
             mToolbarTitle = currentFragment.getTag();
             getSupportActionBar().show();
             getSupportActionBar().setTitle(mToolbarTitle);
+
         }
     };
 
@@ -108,7 +114,7 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-        if(FirebaseHelper.getAuthId() == null)
+        if (FirebaseHelper.getAuthId() == null)
             finish();
         //set online status to true
         FirebaseHelper.getRoot().child(FirebaseHelper.USERS_KEY).child(FirebaseHelper.getAuthId()).child("online").setValue(true);
@@ -124,18 +130,7 @@ public class HomeActivity extends AppCompatActivity {
             FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("online").setValue(true);
         }
 
-        mIndex = 3;
-        FragmentTransaction ft = mFragmentManager.beginTransaction();
-        if (savedInstanceState == null) {
-            mToolbarTitle = mFragmentTags[mIndex];
-            mIndex = 3;
-            ft.replace(R.id.content_frame,
-                    mFragments[mIndex], mFragmentTags[mIndex])
-                    .commit();
-        } else {
-            mToolbarTitle = savedInstanceState.getString("toolbarTitle");
-            mIndex = savedInstanceState.getInt("currentFragmentIndex");
-        }
+
         ArrayList<Friend> friends = new ArrayList<Friend>();
         FirebaseHelper.setFriends(friends);
 
@@ -169,6 +164,7 @@ public class HomeActivity extends AppCompatActivity {
                 Friend friend = dataSnapshot.getValue(Friend.class);
                 friend.setId(dataSnapshot.getKey());
                 FirebaseHelper.addFriend(friend);
+
             }
 
             @Override
@@ -196,17 +192,6 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 FirebaseHelper.setFriendRequests(dataSnapshot);
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-        FirebaseHelper.getRoot().child(FirebaseHelper.FRIENDS_KEY).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                FirebaseHelper.setFRIENDS(dataSnapshot);
             }
 
             @Override
@@ -248,10 +233,6 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 GroupHelper.setMEMBERS(dataSnapshot);
-                GroupListFragment frag = (GroupListFragment) mFragments[3];
-                if (!refreshed)
-                    frag.refresh();
-                refreshed = true;
             }
 
             @Override
@@ -270,6 +251,7 @@ public class HomeActivity extends AppCompatActivity {
 
             }
         });
+
         DrawerListPopulateTask task = new DrawerListPopulateTask();
         task.execute();
         setupDrawer();
@@ -277,6 +259,12 @@ public class HomeActivity extends AppCompatActivity {
         if (currentUserFromNotification != null) {
             setChatFragment(currentUserFromNotification);
         }
+        mIndex = getFragmentsSize() - 3;
+        FragmentTransaction ft = mFragmentManager.beginTransaction();
+        getSupportActionBar().show();
+        getSupportActionBar().setTitle(mFragmentTags[mIndex]);
+        ft.replace(R.id.content_frame, mFragments[mIndex], mFragmentTags[mIndex]);
+        ft.commit();
     }
 
     public void init() {
@@ -310,7 +298,7 @@ public class HomeActivity extends AppCompatActivity {
         mDrawerToggle.setDrawerIndicatorEnabled(true);
         mDrawerLayout.setDrawerListener(mDrawerToggle);
 
-
+        //get first name , about and profile image to show in drawer header
         FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("firstName").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -338,12 +326,11 @@ public class HomeActivity extends AppCompatActivity {
         FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("about").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if(dataSnapshot.getValue()!=null) {
+                if (dataSnapshot.getValue() != null) {
                     String value = String.valueOf(dataSnapshot.getValue());
                     mNavHeaderAbout.setText("" + value);
                     mNavHeaderAbout.setOnClickListener(null);
-                }
-                else{
+                } else {
                     mNavHeaderAbout.setText("Set your description");
                     mNavHeaderAbout.setOnClickListener(mNavHeaderAboutListener);
                 }
@@ -357,13 +344,15 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void setFragment(int index) {
+        mDrawerLayout.closeDrawers();
         Fragment fragment = mFragments[index];
         FragmentTransaction ft = mFragmentManager.beginTransaction();
         mIndex = index;
+
         ft.replace(R.id.content_frame, fragment, mFragmentTags[mIndex]);
+
         ft.addToBackStack(null);
         ft.commit();
-
     }
 
     public void setChatFragment(String userId) {
@@ -381,8 +370,10 @@ public class HomeActivity extends AppCompatActivity {
         if (FirebaseHelper.getAuthId() != null) {
             FirebaseHelper.getRoot().child("users").child(FirebaseHelper.getAuthId()).child("online").setValue(false);
         }
+        FirebaseHelper.setFriendRequests((DataSnapshot) null);
+
         super.onDestroy();
-        Log.d(TAG,"HomeActivity destroyed");
+        Log.d(TAG, "HomeActivity destroyed");
     }
 
     @Override
@@ -409,7 +400,6 @@ public class HomeActivity extends AppCompatActivity {
         if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
             mDrawerLayout.closeDrawers();
         } else {
-
             super.onBackPressed();
         }
     }
@@ -501,7 +491,6 @@ public class HomeActivity extends AppCompatActivity {
                 public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
                     TextView item = (TextView) view.findViewById(R.id.nav_drawer_item_text);
                     mToolbarTitle = (String) item.getText();
-                    mDrawerLayout.closeDrawers();
                     setFragment(position + 3);//temporarily disabling first three fragments so skip that
                 }
             });
