@@ -10,16 +10,19 @@
         android:layout_height="wrap_content"
         android:textStyle="normal"
         android:hint="Email"
+        android:inputType="textEmailAddress"
         android:id="@+id/old_email"/>
     <com.example.stranger.me.widget.RobotoEditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textStyle="normal"
         android:hint="Password"
+        android:inputType="textPassword"
         android:id="@+id/password_for_change_email"/>
     <com.example.stranger.me.widget.RobotoEditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:inputType="textEmailAddress"
         android:textStyle="normal"
         android:hint="New Email"
         android:id="@+id/new_email"/>
