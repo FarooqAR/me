@@ -713,25 +713,36 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
         }
     }
 
-    private class RemoveFriendFromList extends AsyncTask<String, Void, Integer> {
+    private class RemoveFriendFromList extends AsyncTask<String, Void, User> {
         @Override
-        protected Integer doInBackground(String... params) {
+        protected User doInBackground(String... params) {
             String idOfFriendToRemove = params[0];
             for (int i = 0; i < mUsers.size(); i++) {
                 User user = mUsers.get(i);
                 if (user.getId().equals(idOfFriendToRemove)) {
-                    mUsers.remove(i);
-                    return i;
+                    mUsers.remove(user);
+                    return user;
                 }
             }
             return null;
         }
 
         @Override
-        protected void onPostExecute(Integer integer) {
-            super.onPostExecute(integer);
-            if (integer != null) {
+        protected void onPostExecute(User user) {
+            super.onPostExecute(user);
+            if (user != null) {
                 mChatFriendListAdapter.notifyDataSetChanged();
+                //if the removed friend was the current user (whose messages were showing)
+                //then update the listeners for the selected friend
+                if(mCurrentUser.equals(user.getId())){
+                    int newPos = mFriendsListView.getSelectedItemPosition();
+                    mMessages.clear();
+                    mChatAdapter.notifyDataSetChanged();
+                    mCurrentUser = mUsers.get(newPos).getId();
+                    mChatMsgEditText.setHint("Send Message to " + mUsers.get(newPos).getFirstName());
+                    updateChatMessageListener();
+
+                }
             }
         }
     }
