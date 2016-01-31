@@ -257,14 +257,21 @@ public class HomeActivity extends AppCompatActivity {
         setupDrawer();
         mFragmentManager.addOnBackStackChangedListener(mBackStackListener);
         if (currentUserFromNotification != null) {
+            //if the activity is started from pending intent given by notification , then automatically set chat fragment, if there are notifications of other topics as well
+            //then don't do this
             setChatFragment(currentUserFromNotification);
+        }else {
+            //if the activity is started normally..then show the friends fragment first
+            mIndex = getFragmentsSize() - 3;
+            FragmentTransaction ft = mFragmentManager.beginTransaction();
+            mToolbarTitle = mFragmentTags[mIndex];
+
+            //onBackStackListener doesn't called for the first time, so toolbar wont have title
+            getSupportActionBar().show();
+            getSupportActionBar().setTitle(mToolbarTitle);
+            ft.replace(R.id.content_frame, mFragments[mIndex], mFragmentTags[mIndex]);
+            ft.commit();
         }
-        mIndex = getFragmentsSize() - 3;
-        FragmentTransaction ft = mFragmentManager.beginTransaction();
-        getSupportActionBar().show();
-        getSupportActionBar().setTitle(mFragmentTags[mIndex]);
-        ft.replace(R.id.content_frame, mFragments[mIndex], mFragmentTags[mIndex]);
-        ft.commit();
     }
 
     public void init() {
@@ -360,7 +367,6 @@ public class HomeActivity extends AppCompatActivity {
         FragmentTransaction ft = mFragmentManager.beginTransaction();
         mIndex = 4;
         ft.replace(R.id.content_frame, fragment, mFragmentTags[mIndex]);
-        ft.addToBackStack(null);
         ft.commit();
 
     }
