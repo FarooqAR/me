@@ -27,23 +27,31 @@ import java.util.TimeZone;
 /**
  * Created by Farooq on 1/2/2016.
  */
+//Adapter for chat messages in ChatFragment and GroupConversationFragment
 public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
     private ArrayList<Message> mMessages;
     public Context mContext;
-    private RecyclerView mRecyclerView;
+    private RecyclerView mRecyclerView;//it will be used to scroll to end as the chat image is loaded
+
     public ChatAdapter(Context context, ArrayList<Message> messages) {
         mMessages = messages;
         mContext = context;
     }
-    public void setRecyclerView(RecyclerView recyclerView){
+
+    public void setRecyclerView(RecyclerView recyclerView) {
         mRecyclerView = recyclerView;
     }
+
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = null;
-        if (viewType == 0) {
+
+        if (viewType == 0) {//if the current message is sent by current authenticated user then show the message to the right side
+
             view = LayoutInflater.from(parent.getContext()).inflate(R.layout.chat_item_right, parent, false);
-        } else if (viewType == 1) {
+
+        } else if (viewType == 1) {//otherwise show it to the left
+
             view = LayoutInflater.from(parent.getContext()).inflate(R.layout.chat_item, parent, false);
         }
         return new ViewHolder(view);
@@ -52,34 +60,34 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
         final Message message = mMessages.get(position);
-        if (message.getMessage() != null) {
+        if (message.getMessage() != null) {//if the message is a text then show it
             holder.showMessageView();
             holder.mMessageText.setText(message.getMessage());
-        } else if (message.getImageUrl() != null) {
-            holder.showMessageImage();
-            Picasso.with(mContext).load(message.getImageUrl()).into(holder.mChatImage, new Callback() {
-                @Override
-                public void onSuccess() {
-                    holder.mImageProgress.setVisibility(View.GONE);
-                    if(mRecyclerView != null) mRecyclerView.scrollToPosition(position);
-                }
+        } else if (message.getImageUrl() != null) {//else if the message is an image then only show the image
+            holder.showMessageImage();//show a progressbar if image is loading
+            Picasso.with(mContext).load(message.getImageUrl())
+                    .into(holder.mChatImage, new Callback() {
+                        @Override
+                        public void onSuccess() {
+                            holder.mImageProgress.setVisibility(View.GONE);
+                            if (mRecyclerView != null) mRecyclerView.scrollToPosition(position);
+                        }
 
-                @Override
-                public void onError() {
+                        @Override
+                        public void onError() {
 
-                }
-            });
+                        }
+                    });
 
-        }
-        else if(message.getLocationLat()!=null ){
+        } else if (message.getLocationLat() != null) {
             holder.showMessageMapBtn();
             holder.mChatMapBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     Intent intent = new Intent(mContext, MapsActivity.class);
-                    intent.putExtra("location",message.getLocation());
-                    intent.putExtra("locationLat",message.getLocationLat());
-                    intent.putExtra("locationLong",message.getLocationLong());
+                    intent.putExtra("location", message.getLocation());
+                    intent.putExtra("locationLat", message.getLocationLat());
+                    intent.putExtra("locationLong", message.getLocationLong());
                     mContext.startActivity(intent);
                 }
             });
@@ -90,16 +98,16 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
     }
 
     public String getFormattedDate(String time) {
-        long currentTime = System.currentTimeMillis();
-        long timestamp = Long.parseLong(time);
+        long currentTime = System.currentTimeMillis();//current time in milliseconds
+        long timestamp = Long.parseLong(time);//message time in milliseconds
         SimpleDateFormat simpleDateFormat = null;
         if ((currentTime - timestamp) > (1000 * 60 * 60 * 24)) {//that means more than one day has passed
-            simpleDateFormat = new SimpleDateFormat("EEE, hh:mm a");
+            simpleDateFormat = new SimpleDateFormat("EEE, hh:mm a");//then show message day as well
         } else {
-            simpleDateFormat = new SimpleDateFormat("hh:mm a");
+            simpleDateFormat = new SimpleDateFormat("hh:mm a");//otherwise only show message
         }
         simpleDateFormat.setTimeZone(TimeZone.getDefault());
-        String formattedDate = simpleDateFormat.format(new Date(timestamp));
+        String formattedDate = simpleDateFormat.format(new Date(timestamp));//it will format th date like this : 00:00 AM/PM  or like this : Day 00:00 AM/PM
         return formattedDate;
     }
 
@@ -121,6 +129,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
         public ImageView mChatImage;
         public ImageButton mChatMapBtn;
         public ProgressBar mImageProgress;
+
         public ViewHolder(View itemView) {
             super(itemView);
             init(itemView);
@@ -134,19 +143,22 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
             mImageProgress = (ProgressBar) view.findViewById(R.id.chat_image_progress);
             mChatMapBtn = (ImageButton) view.findViewById(R.id.chat_msg_item_map_btn);
         }
-        public void showMessageImage(){
+
+        public void showMessageImage() {
             mMessageText.setVisibility(View.GONE);
             mChatMapBtn.setVisibility(View.GONE);
             mChatImage.setVisibility(View.VISIBLE);
             mImageProgress.setVisibility(View.VISIBLE);
         }
-        public void showMessageView(){
+
+        public void showMessageView() {
             mMessageText.setVisibility(View.VISIBLE);
             mChatImage.setVisibility(View.GONE);
             mImageProgress.setVisibility(View.GONE);
             mChatMapBtn.setVisibility(View.GONE);
         }
-        public void showMessageMapBtn(){
+
+        public void showMessageMapBtn() {
             mMessageText.setVisibility(View.GONE);
             mChatImage.setVisibility(View.GONE);
             mImageProgress.setVisibility(View.GONE);
