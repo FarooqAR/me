@@ -157,7 +157,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
                 mCurrentUser = mUsers.get(position).getId();
                 mChatMsgEditText.setHint("Send Message to " + mUsers.get(position).getFirstName());
                 mSendClicked = false;
-                updateChatMessageListener();
+                updateChatMessageListener();//first remove and then add the listener again
             }
         }
     };
@@ -191,12 +191,20 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
     private ChildEventListener mChatMessageListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
             String sender = String.valueOf(dataSnapshot.child("sender").getValue());
             final String pushKey = dataSnapshot.getKey();
+
+            /*
+            * Every time onChildAdded is called, we will think that the user is currently on ChatFragment and has
+            * already saw this message, so set seen value of this message to true only if the message is sent his
+            * friend not himself
+            */
             if (!sender.equals(FirebaseHelper.getAuthId())) {
                 FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(ChatHelper.getConversationKey(mCurrentUser)).addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
+                        //if the message is somehow deleted, this will prevent it from recreating
                         if (dataSnapshot.child(pushKey).exists()) {
                             FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(ChatHelper.getConversationKey(mCurrentUser))
                                     .child(pushKey).child("seen").setValue(true);
@@ -264,13 +272,17 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
             if (ChatHelper.getPrivateChatNode() != null) {//if data has been retrieved
                 mSendClicked = true;
                 disableViews();
+                //this is library method and will be called whenever the user click on send image button
+                //it will help to choose an image as well as to crop it, maximum size to crop is 720x1280, to reduce size
                 Crop.pickImage(getActivity());
             }
         }
     };
 
     private void beginCrop(Uri source) {
+        //get cache directory of this app, and add a file named cropped, it will be used to store the cropped image later
         Uri destination = Uri.fromFile(new File(getActivity().getCacheDir(), "cropped"));
+        //start cropping
         Crop.of(source, destination).asSquare().withMaxSize(720, 1280).start(getActivity());
     }
 
@@ -278,16 +290,23 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == Crop.REQUEST_PICK && resultCode == Activity.RESULT_OK) {
+            //if an image has been picked, then call it
             beginCrop(data.getData());
 
         } else if (requestCode == Crop.REQUEST_CROP && resultCode == Activity.RESULT_OK) {
             //the image has been cropped and ready to upload
             SnackbarHelper.create(mRootView, "Uploading Image").setDuration(Snackbar.LENGTH_INDEFINITE).show();
+            //upload to cloudinary
             new ImageUploadTask().execute();
 
         } else if (requestCode == PLACE_PICKER_REQUEST && resultCode == Activity.RESULT_OK) {
-            //sendMessage
-            Place place = PlacePicker.getPlace(data, getActivity());
+            /*
+            * get data from place picker and extract latitude,longitude and location name
+            * and create a message object
+            */
+            Place place = PlacePicker.getPlace(
+                    data,
+                    getActivity());
             if (place.getName() != null && place.getLatLng() != null) {
                 Message msg = new Message();
                 msg.setLocationLat(place.getLatLng().latitude);
@@ -297,15 +316,17 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
                     @Override
                     public void onComplete(FirebaseError firebaseError, Firebase firebase) {
                         enableViews();
-                        Log.d(TAG, "map sent");
                     }
                 });
             }
         } else if (resultCode == Activity.RESULT_CANCELED) {
+            //the user may have cancelled picking an image or a place, then enable views which were
+            //previously got disabled by clicking on send (location or image) button
             enableViews();
         }
     }
 
+    //listener for adding friends to chat list
     private ChildEventListener mFriendsListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -345,6 +366,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
         return fragment;
     }
 
+    //it will be used when the user click on a notification
     public static ChatFragment newInstance(String userId) {
         ChatFragment fragment = new ChatFragment();
         Bundle args = new Bundle();
@@ -386,6 +408,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
         View view = inflater.inflate(R.layout.fragment_chat, container, false);
         init(view);
         if (mCurrentUser != null) {
+            //messages have been viewed by the user, so set their seen value to true
             new ResetSeen().execute(ChatHelper.getConversationKey(mCurrentUser));
         }
         mMessages.clear();
@@ -523,11 +546,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
     @Override
     public void onStart() {
         super.onStart();
-        if (mGoogleApiClient != null) {
-            if (!mGoogleApiClient.isConnected() || !mGoogleApiClient.isConnecting()) {
-                mGoogleApiClient.connect();
-            }
-        }
+
     }
 
     @Override
@@ -619,6 +638,9 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
 
     @Override
     public void onResume() {
+        if (!mGoogleApiClient.isConnecting() && !mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.connect();
+        }
         if (mCurrentUser != null) {
             Integer i = null;
             try {
@@ -734,7 +756,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
                 mChatFriendListAdapter.notifyDataSetChanged();
                 //if the removed friend was the current user (whose messages were showing)
                 //then update the listeners for the selected friend
-                if(mCurrentUser.equals(user.getId())){
+                if (mCurrentUser.equals(user.getId())) {
                     int newPos = mFriendsListView.getSelectedItemPosition();
                     mMessages.clear();
                     mChatAdapter.notifyDataSetChanged();
@@ -921,8 +943,8 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             if (dataSnapshot.child(current.getPush_key()).exists()) {
-                                Map<String,Object> update = new HashMap<String, Object>();
-                                update.put("seen",true);
+                                Map<String, Object> update = new HashMap<String, Object>();
+                                update.put("seen", true);
                                 FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(key).child(current.getPush_key()).updateChildren(update);
                             }
                             FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(key).removeEventListener(this);
