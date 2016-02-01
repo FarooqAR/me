@@ -19,6 +19,7 @@ Roboto-Medium  is used as the main font of this app.
 1.      Firebase Authentication
 2.	Facebook Authentication
 3.	Google Authentication
+![login.png](https://bitbucket.org/repo/bX7bk9/images/3561909152-login.png)
 *	If the user wants to sign up with Email and Password, there will be 4 steps:
 * 1.	User have to enter his email and password
 2.	User have to enter his first name , last name and age
