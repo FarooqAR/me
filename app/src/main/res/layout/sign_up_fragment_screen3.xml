@@ -31,6 +31,7 @@ and user can skip it
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
+            android:singleLine="true"
             android:hint="About You"
             android:textColor="#fff"
             android:textColorHint="#fff"

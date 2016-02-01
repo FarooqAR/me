@@ -29,6 +29,7 @@
             android:drawableLeft="@drawable/ic_email_white"
             android:drawablePadding="5dp"
             android:hint="Your Email"
+            android:singleLine="true"
             android:textColor="#fff"
             android:textColorHint="#fff"
             android:textCursorDrawable="@null" />
@@ -43,7 +44,7 @@
             android:drawablePadding="5dp"
             android:hint="Your Password"
             android:inputType="textPassword"
-
+            android:singleLine="true"
             android:textColor="#fff"
             android:textColorHint="#fff"
             android:textCursorDrawable="@null" />

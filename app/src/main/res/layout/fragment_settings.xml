@@ -121,6 +121,7 @@
                 <com.example.stranger.me.widget.RobotoEditText
                     android:id="@+id/settings_first_name"
                     android:layout_width="match_parent"
+                    android:singleLine="true"
                     android:layout_height="wrap_content"
                     android:textStyle="normal" />
             </LinearLayout>
@@ -149,6 +150,7 @@
                     android:id="@+id/settings_last_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:singleLine="true"
                     android:textStyle="normal" />
             </LinearLayout>
         </android.support.v7.widget.CardView>
@@ -176,6 +178,7 @@
                     android:id="@+id/settings_about"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:singleLine="true"
                     android:textStyle="normal" />
             </LinearLayout>
         </android.support.v7.widget.CardView>
@@ -279,6 +282,7 @@
                     android:id="@+id/settings_age"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:singleLine="true"
                     android:inputType="number"
                     android:textStyle="normal" />
             </LinearLayout>

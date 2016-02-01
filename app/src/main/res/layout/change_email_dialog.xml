@@ -10,6 +10,7 @@
         android:layout_height="wrap_content"
         android:textStyle="normal"
         android:hint="Email"
+        android:singleLine="true"
         android:inputType="textEmailAddress"
         android:id="@+id/old_email"/>
     <com.example.stranger.me.widget.RobotoEditText
@@ -17,12 +18,14 @@
         android:layout_height="wrap_content"
         android:textStyle="normal"
         android:hint="Password"
+        android:singleLine="true"
         android:inputType="textPassword"
         android:id="@+id/password_for_change_email"/>
     <com.example.stranger.me.widget.RobotoEditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:inputType="textEmailAddress"
+        android:singleLine="true"
         android:textStyle="normal"
         android:hint="New Email"
         android:id="@+id/new_email"/>

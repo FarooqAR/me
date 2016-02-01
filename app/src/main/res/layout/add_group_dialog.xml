@@ -11,11 +11,13 @@
         android:textStyle="normal"
         android:hint="Group Name"
         android:maxLength="30"
+        android:singleLine="true"
         android:id="@+id/dialog_group_name"/>
     <com.example.stranger.me.widget.RobotoEditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textStyle="normal"
+        android:singleLine="true"
         android:hint="Group Description"
         android:id="@+id/dialog_group_description"/>
 </LinearLayout>
