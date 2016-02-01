@@ -532,7 +532,7 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
     @Override
     public void onPause() {
         removeListeners();
-        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+        if (mGoogleApiClient != null) {
             mGoogleApiClient.disconnect();
         }
         if (mCurrentUser != null && ChatHelper.getConversationKey(mCurrentUser) != null) {
