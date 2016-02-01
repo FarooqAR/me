@@ -29,20 +29,25 @@ Roboto-Medium  is used as the main font of this app.
 *	After the user completes sign up or login process, he will be proceeded to main screen with a navigation drawer from where he can switch between fragments.
 *	Navigation drawer is made according to material design guidelines. 
 *	In navigation drawer, there is a header for user information and recyclerview for showing fragments list.
+![main_screen_drawer.png](https://bitbucket.org/repo/bX7bk9/images/3028119213-main_screen_drawer.png)
 ## Friends:
 *	First thing to show to user will be his friends. If he don’t have any friends he can click on the given button to find a contact
 *	If he have friends, he can remove one by clicking on a button adjacent to that user
 *	As he go to find a contact, he can search a user by first name or last name and if user with given filters exists, it will be shown in the recyclerview.
 *	If someone has already sent a friend request. User can confirm him as friend.
 *	If user has sent a friend request to someone. “Request sent” will be shown.
-Settings
+![friends.png](https://bitbucket.org/repo/bX7bk9/images/1867962936-friends.png)
+## Settings
 *	User can change his email, password, first name, last name, profile image, description, age and country in Settings fragment.
 *	If the user is authenticated with facebook or google, he can’t change his email or password because this app don’t take email or password or any sensitive data.
+![settings.png](https://bitbucket.org/repo/bX7bk9/images/510867431-settings.png)
 ## Private Chat:
 *	In Chat fragment, there is a list of friends with their online status. user can switch between conversation by clicking on a friend item.
 *	Friends list will appear on left side of the screen containing user icon and name (in landscape).
 *	If the user is online, a green dot will appear on the top left corner of a user’s image.
-*	User can send a normal message, image
+*	User can send a normal message, image or a location
+*       A location in message will be shown as a red marker, clicking on it will open up the Maps Activity.
+![chat.png](https://bitbucket.org/repo/bX7bk9/images/3543694128-chat.png)
 ## Private Chat Notifications:
 *	For notifications, app will use a service with broadcast receiver.
 *	If user is on a fragment other than chat. user will get notified if his friend sent a message.  notifications will appear on status bar, clicking a notification will open chat fragment 
@@ -58,3 +63,4 @@ Settings
 *	If the user is just a member of that group, he can chat as well as see members
 *	If the user is admin of that group, he can see its chat, members and member requests.
 *	Admin can remove a member, add a member
+![groups.png](https://bitbucket.org/repo/bX7bk9/images/596499253-groups.png)
