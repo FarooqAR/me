@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -72,7 +73,8 @@ public class LoginFragment extends Fragment implements GoogleApiClient.Connectio
                         getActivity().finish();
 
                     } else {
-                        SnackbarHelper.create(mRootView, "You're not registered. Please Sign up").show();
+                        SnackbarHelper.create(mRootView, "You're not registered. Please Sign up")
+                                .setDuration(Snackbar.LENGTH_LONG).show();
                     }
                     enableViews();
                 }
@@ -299,6 +301,7 @@ public class LoginFragment extends Fragment implements GoogleApiClient.Connectio
 
                 try {
                     String scope = String.format("oauth2:%s", Scopes.PLUS_LOGIN);
+
                     token = GoogleAuthUtil.getToken(getActivity(), Plus.AccountApi.getAccountName(mGoogleApiClient), scope);
                 } catch (IOException transientEx) {
                     /* Network or server error */
