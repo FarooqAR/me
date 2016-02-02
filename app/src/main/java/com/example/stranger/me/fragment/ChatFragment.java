@@ -206,8 +206,10 @@ public class ChatFragment extends Fragment implements OnConnectionFailedListener
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         //if the message is somehow deleted, this will prevent it from recreating
                         if (dataSnapshot.child(pushKey).exists()) {
+                            Map<String,Object> update = new HashMap<>();
+                            update.put("seen",true);
                             FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(ChatHelper.getConversationKey(mCurrentUser))
-                                    .child(pushKey).child("seen").setValue(true);
+                                    .child(pushKey).updateChildren(update);
                         }
                         FirebaseHelper.getRoot().child(FirebaseHelper.PRIVATE_CONVERSATION).child(ChatHelper.getConversationKey(mCurrentUser)).removeEventListener(this);
                     }
