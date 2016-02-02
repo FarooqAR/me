@@ -261,6 +261,9 @@ public class HomeActivity extends AppCompatActivity {
         if (currentUserFromNotification != null) {
             //if the activity is started from pending intent given by notification , then automatically set chat fragment, if there are notifications of other topics as well
             //then don't do this
+            mToolbarTitle = "Chat";
+            getSupportActionBar().show();
+            getSupportActionBar().setTitle(mToolbarTitle);
             setChatFragment(currentUserFromNotification);
         }else {
             //if the activity is started normally..then show the friends fragment first
@@ -282,7 +285,7 @@ public class HomeActivity extends AppCompatActivity {
         mDrawerListView = (ListView) findViewById(R.id.nav_drawer_list);
         mProfileImage = (CircleImageView) findViewById(R.id.nav_header_image);
         mNavHeaderName = (RobotoTextView) findViewById(R.id.nav_drawer_header_name);
-        mNavHeaderAbout = (RobotoTextView) findViewById(R.id.nav_drawer_header_about);
+        mNavHeaderAbout = (RobotoTextView)findViewById(R.id.nav_drawer_header_about);
     }
 
     public void setupDrawer() {
